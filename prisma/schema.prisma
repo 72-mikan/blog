@@ -21,11 +21,32 @@ enum Role {
 }
 
 model User {
-  id        String @id @default(cuid())
+  id        String @id @default(cuid()) @unique
   name      String
   email     String @unique
   password  String
   role      Role      @default(USER)
+  contexts  Context[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Context {
+  id        Int       @id @default(autoincrement())
+  user      User      @relation(fields: [userId], references: [id])
+  userId    String
+  title     String
+  tags      Tag[]
+  context   String
+  isPublic  Boolean
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Tag {
+  id        Int       @id @default(autoincrement())
+  contexts  Context[]
+  name      String    @unique
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 }

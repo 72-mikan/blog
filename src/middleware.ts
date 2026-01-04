@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 import NextAuth from "next-auth";
 import { authConfig } from './auth.config';
 
@@ -9,7 +10,6 @@ import { authConfig } from './auth.config';
 //   return NextResponse.next();
 // }
 
-// export default NextAuth(authConfig).auth;
 const { auth } = NextAuth(authConfig);
 export default auth(async function middleware(req) {
   const session = req.auth;
