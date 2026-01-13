@@ -2,6 +2,7 @@
 
 import { getToken } from "@/lib/jwt";
 import { redirect } from "next/navigation";
+import { ApiConnectError } from "@/class/error/ApiConnectError";
 
 type ActionState = {
   success: boolean;
@@ -22,7 +23,7 @@ export async function createBlogPost(
   try {
     // tokenの取得
     const token = await getToken();
-    const res = await fetch("http://localhost:3000/api/blog", {
+    const res = await fetch(`${process.env.URL}/api/blog`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -38,19 +39,20 @@ export async function createBlogPost(
     // レスポンスが正常でなければnullを返す
     if (!res.ok) {
       // API接続エラー
-      throw new Error();
+      throw new ApiConnectError('API接続エラーが発生しました。');
     }
+
+    const data = await res.json();
+
   } catch (e) {
-    console.error('ブログ作成エラー', e);
-    return {
-      success: false,
-      errors: {
-        title: [],
-        tags: [],
-        context: [],
-        isPublic: []
-      }
-    };
+    if (e instanceof ApiConnectError) {
+      return {
+        success: false,
+        errors: {
+          error: e.message,
+        },
+      };
+    }
   }
-  redirect(`/test`);
+  redirect(`/blogs`);
 }

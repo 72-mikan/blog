@@ -1,38 +1,100 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import type { Context } from '@/interface/context';
 import { verifyToken } from "@/lib/jwt";
+import { UnauthorizedError } from '@/class/error/UnauthorizedError';
+import { ForbiddenError } from '@/class/error/ForbiddenError';
+import { BadRequestError } from '@/class/error/BadRequestError';
+import { createBlogSchema } from '@/validations/blog/create';
 
 export async function POST(req: Request) {
-  const data: Context = await req.json();
+  try {
+    const data: Context = await req.json();
 
-  // tokenの検証
-    const devodeToken =  data.token ? await verifyToken(data.token) : '';
-    if (!devodeToken) {
-      throw new Error('Invalid token');
+    // バリデーションチェック
+    const validationResult = createBlogSchema.safeParse({
+      title: data.title,
+      context: data.context,
+      tags: data.tags,
+    });
+
+    // バリデーションチェック
+    if (!validationResult.success) {
+      const errors = validationResult.error.flatten();
+      return new Response(
+        JSON.stringify({
+          errors: {
+            title: errors.fieldErrors.title?.[0] || [],
+            context: errors.fieldErrors.context?.[0] || [],
+            tags: errors.fieldErrors.tags?.[0] || [],
+          }
+        })
+        , { status: 400 }
+      );
     }
 
-  try {
+    // tokenの検証
+    const decodeToken =  data.token && await verifyToken(data.token);
+    if (!decodeToken) {
+      throw new UnauthorizedError('トークンが有効ではありません。');
+    }
+
+    if (decodeToken.payload.role !== 'ADMIN') {
+      throw new ForbiddenError('権限がありません。');
+    }
+    const existingTags = await prisma.tag.findMany({
+      where: {
+        name: { in: data.tags },
+      },
+    });
+
+    if (existingTags.length !== data.tags.length) {
+      throw new BadRequestError('タグが存在しません。');
+    }
+
     await prisma.context.create({
       data: {
         title: data.title,
         context: data.context,
         isPublic: data.isPublic,
         user: {
-          connect: { id: devodeToken.payload.sub }, // 投稿者を紐づける
+          connect: { id: decodeToken.payload.sub }, // 投稿者を紐づける
         },
         tags: {
-          connectOrCreate: data.tags.map((tag) => ({
-            where: { name: tag },
-            create: { name: tag },
-          })),
+          connect: data.tags.map((tag) => ({ name: tag})),
         },
       },
     });
-
+    return new Response('投稿が成功しました。', { status: 200 });
   } catch (e) {
-    console.error('ブログ作成エラー', e);
-    return new Response('Error creating blog post', { status: 500 });
+    if (e instanceof UnauthorizedError ||
+        e instanceof ForbiddenError ||
+        e instanceof BadRequestError) {
+          return new Response(
+            JSON.stringify({
+              errors: {
+                error: e.message
+              }
+            })
+            , { status: e.status }
+          );
+    } else if (e instanceof PrismaClientKnownRequestError) {
+      return new Response(
+        JSON.stringify({
+          errors: {
+            error: 'サーバーエラーが発生しました。'
+          }
+        })
+        , { status: 500 }
+      );
+    }
+    return new Response(
+      JSON.stringify({
+        errors: {
+          error: 'サーバーエラーが発生しました。'
+        }
+      })
+      , { status: 500 }
+    );
   }
-  return new Response('Hello, blog route!')
 }
