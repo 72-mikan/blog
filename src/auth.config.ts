@@ -15,19 +15,20 @@ export const authConfig = {
       const pathname = url.pathname;
 
       try {
-        // tokenの取得
-        const token = await getToken();
+        // // tokenの取得
+        // const token = await getToken();
 
         // jwttokenの検証
         const res =  await fetch(`${process.env.URL}/api/auth/verifyToken`, {
           method: "POST",
+          credentials: "include",
           headers: { 
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            token: token,
-          }),
-        })
+          // body: JSON.stringify({
+          //   token: token,
+          // }),
+        });
 
         // レスポンスが正常でなければnullを返す
         if (!res.ok) return false;

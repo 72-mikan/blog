@@ -27,7 +27,6 @@ export async function submitSignInForm(
   if (!validationResult.success) {
     // エラーメッセージの取得 flattenでエラーを見やすく加工
     const errors = validationResult.error.flatten();
-    console.log('サーバー側でエラー', errors);
     return {
       success: false,
       errors: {
