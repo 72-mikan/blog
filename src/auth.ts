@@ -28,9 +28,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
           const data:SignIn = await res.json();
 
-          if (data.token) {
-            setCookie(data.token);
-          }
+          // if (data.token) {
+          //   setCookie(data.token);
+          // }
 
           // ユーザー情報を抽出
           const user = {
