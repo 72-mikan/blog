@@ -6,7 +6,7 @@ declare module "next-auth" {
   // User 型を拡張
   interface User extends DefaultUser {
     id?: string;
-    // role?: string; // ここに独自フィールドを追加
+    role?: string; // ここに独自フィールドを追加
   }
 
   // Session にも role を追加
@@ -15,6 +15,7 @@ declare module "next-auth" {
       id: string;
       // role?: string;
     } & DefaultSession["user"];
+    accessToken?: string;
   }
 }
 

@@ -41,7 +41,7 @@ export async function submitSignUpForm(
 
   try {
     // サインアップAPI呼び出し
-    const res = await fetch("http://localhost:3000/api/auth/signUp", {
+    const res = await fetch(`${process.env.URL}/api/auth/signUp`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ 

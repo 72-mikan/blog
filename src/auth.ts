@@ -3,7 +3,6 @@ import { authConfig } from '@/auth.config';
 import Credentials from "next-auth/providers/credentials"
 import { CustomAuthError } from "@/class/CustomAuthError";
 import type { SignIn } from "@/interface/signIn";
-import { setCookie } from "@/lib/jwt";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
@@ -27,10 +26,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           }
 
           const data:SignIn = await res.json();
-
-          // if (data.token) {
-          //   setCookie(data.token);
-          // }
 
           // ユーザー情報を抽出
           const user = {

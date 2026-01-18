@@ -1,4 +1,4 @@
-import { jwtEncode, verifyToken } from "@/lib/jwt";
+// import { jwtEncode, verifyToken } from "@/lib/jwt";
 import { NextResponse } from "next/server";
 import type { User } from "@/interface/user";
 import { existCheck } from "@/validations/user";
@@ -30,12 +30,12 @@ export async function POST(req: Request) {
   }
 }
 
-// JWTのテスト用エンドポイント
-export async function GET() {
-  const jwt = await jwtEncode('user123', 'admin'); 
-  console.log('生成したJWT:', jwt);
-  console.log('デコード結果:', await verifyToken(jwt));
-  return NextResponse.json([
-    {jwt: jwt},
-  ]);
-}
+// // JWTのテスト用エンドポイント
+// export async function GET() {
+//   const jwt = await jwtEncode('user123', 'admin'); 
+//   console.log('生成したJWT:', jwt);
+//   console.log('デコード結果:', await verifyToken(jwt));
+//   return NextResponse.json([
+//     {jwt: jwt},
+//   ]);
+// }

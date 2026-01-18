@@ -7,8 +7,8 @@ export default function Header() {
   const [isPending, startTransition] = useTransition();
 
   const signOut = () => {
-    startTransition(() => {
-      customSignOut();
+    startTransition(async () => {
+      await customSignOut();
     });
   };
 
