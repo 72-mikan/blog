@@ -84,5 +84,4 @@ export async function submitSignInForm(
     }
     throw error;
   }
-
 }
