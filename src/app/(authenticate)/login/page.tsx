@@ -1,14 +1,27 @@
 "use client"
 
-import { useActionState } from 'react';
+import { useActionState, useEffect } from 'react';
 import Link from 'next/link';
 import { submitSignInForm } from '@/lib/actions/signIn';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 export default function SignInPage() {
-  const [errorMessage, formAction, isPending] = useActionState(
+  const [state, formAction, isPending] = useActionState(
     submitSignInForm,
     undefined,
   );
+  const { update } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (state?.success) {
+      update().then(() => {
+        router.refresh();
+        router.push('/');
+      });
+    }
+  }, [state]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -59,11 +72,11 @@ export default function SignInPage() {
             </div>
           </div>
 
-          {/* {errorMessage && (
+          {state?.errors?.commom && (
             <div className="rounded-md bg-red-50 p-4">
-              <div className="text-sm text-red-700">{errorMessage}</div>
+              <div className="text-sm text-red-700">{state.errors.commom}</div>
             </div>
-          )} */}
+          )}
 
           <div>
             <button

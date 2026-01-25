@@ -3,5 +3,4 @@ export interface SignIn {
   message: string;
   id: string;
   role: string;
-  // token: string;
 }

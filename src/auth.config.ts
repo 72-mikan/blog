@@ -24,6 +24,8 @@ export const authConfig = {
         return true; // どちらでもアクセス可能
       } else if (isLoggedIn && nextUrl.pathname === '/login' ) {
         return Response.redirect(new URL('/', nextUrl));
+      } else if (isLoggedIn) {
+        return true; // ログイン済みならアクセス可能
       }
 
       return false; // その他のページはログイン必須
@@ -31,11 +33,13 @@ export const authConfig = {
     async jwt({ token, user }) {
       if (user?.id) {
         token.id = user.id;
+        token.role = user.role ?? null;
       }
       return token;
     },
     async session({ session, token }) {
       session.user.id = token.id;
+      session.user.role = token.role ?? null;
       return session;
     }
   },
