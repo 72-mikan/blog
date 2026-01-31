@@ -11,6 +11,9 @@ type ActionState = {
     password?: string[]|string;
     commom?: string;
   };
+  values?: {
+    email?: string;
+  };
 } | undefined;
 
 export async function submitSignInForm(
@@ -32,6 +35,9 @@ export async function submitSignInForm(
       errors: {
         email: errors.fieldErrors.email?.[0] || [],
         password: errors.fieldErrors.password?.[0] || [],
+      },
+      values: {
+        email: email as string,
       }
     };
   }
@@ -46,7 +52,9 @@ export async function submitSignInForm(
 
     return { success: true };
   } catch (error) {
-    return handleAuthError(error);
+    return handleAuthError(error, {
+      email: email as string,
+    });
   }
 
 }

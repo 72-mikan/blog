@@ -12,6 +12,10 @@ type ActionState = {
     password?: string[]|string;
     commom?: string;
   };
+  values?: {
+    name?: string;
+    email?: string;
+  };
 } | undefined;
 
 export async function submitSignUpForm(
@@ -32,8 +36,13 @@ export async function submitSignUpForm(
     return {
       success: false,
       errors: {
+        name: errors.fieldErrors.name?.[0] || [],
         email: errors.fieldErrors.email?.[0] || [],
         password: errors.fieldErrors.password?.[0] || [],
+      },
+      values: {
+        name: name as string,
+        email: email as string,
       }
     };
   }
@@ -60,6 +69,10 @@ export async function submitSignUpForm(
             success: false,
             errors: {
               email: 'このメールアドレスは既に使用されています。'
+            },
+            values: {
+              name: name as string,
+              email: email as string,
             }
           };
         default:
@@ -67,6 +80,10 @@ export async function submitSignUpForm(
             success: false,
             errors: {
               commom: 'サーバーエラーが発生しました。時間をおいて再試行してください。'
+            },
+            values: {
+              name: name as string,
+              email: email as string,
             }
           };
       }
@@ -75,7 +92,10 @@ export async function submitSignUpForm(
     // サインイン処理
     await signIn('credentials', formData);
   } catch (error) {
-    return handleAuthError(error);
+    return handleAuthError(error, {
+      name: name as string,
+      email: email as string,
+    });
   }
 
 }
