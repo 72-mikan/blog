@@ -2,8 +2,7 @@
 
 import {signUpSchema } from '@/validations/signUp';
 import { signIn } from '@/auth'; // signIn関数のインポート
-import { AuthError } from "next-auth";
-import { CustomAuthError } from '@/class/CustomAuthError';
+import { handleAuthError } from './error';
 
 type ActionState = {
   success: boolean;
@@ -53,62 +52,30 @@ export async function submitSignUpForm(
 
     // レスポンスが正常でなければnullを返す
     if (!res.ok) {
+      const data = await res.json();
       // API接続エラー
-      throw new Error("サインアップに失敗しました。");
+      switch (data.error_type) {
+        case 'EXIST_CHECK_FAILED':
+          return {
+            success: false,
+            errors: {
+              email: 'このメールアドレスは既に使用されています。'
+            }
+          };
+        default:
+          return {
+            success: false,
+            errors: {
+              commom: 'サーバーエラーが発生しました。時間をおいて再試行してください。'
+            }
+          };
+      }
     }
 
     // サインイン処理
     await signIn('credentials', formData);
   } catch (error) {
-    if (error instanceof AuthError) {
-      switch (error.type) {
-        case 'CredentialsSignin':
-          return {
-            success: false,
-            errors: {
-              commom: 'メールアドレスまたはパスワードが正しくありません。'
-            }
-          };
-        default:
-          return {
-            success: false,
-            errors: {
-              commom: 'エラーが発生しました。'
-            }
-          };
-      }
-    } else if (error instanceof CustomAuthError) {
-      switch (error.type) {
-        case 'API_CONNECTION_ERROR':
-          return {
-            success: false,
-            errors: {
-              commom: 'エラーが発生しました。管理者に問い合わせてください。'
-            }
-          };
-        case 'NOT_EXISTS_USER_ERROR':
-          return {
-            success: false,
-            errors: {
-              commom: '入力されたメールアドレスでユーザー登録がされていません。'
-            }
-          };
-        default:
-          return {
-            success: false,
-            errors: {
-              commom: 'エラーが発生しました。'
-            }
-          };
-      }
-    } else {
-      return {
-        success: false,
-        errors: {
-          commom: 'サインアップに失敗しました。管理者に問い合わせてください。'
-        }
-      };
-    }
+    return handleAuthError(error);
   }
 
 }

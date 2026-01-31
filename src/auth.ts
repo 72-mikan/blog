@@ -1,8 +1,9 @@
 import NextAuth from "next-auth"
 import { authConfig } from '@/auth.config';
 import Credentials from "next-auth/providers/credentials"
-import { CustomAuthError } from "@/class/CustomAuthError";
 import type { SignIn } from "@/interface/signIn";
+import { ERROR_TYPES } from '@/constants/errorTypes';
+import { CustomCredentialsSignin } from '@/class/CustomCredentialsSignin';
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
@@ -19,10 +20,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               password: credentials?.password
             }),
           })
-          // レスポンスが正常でなければnullを返す
+
+          // レスポンスが正常でなければエラーを投げる
           if (!res.ok) {
-            // API接続エラー
-            return new CustomAuthError("API_CONNECTION_ERROR", "API接続エラーが発生しました。");
+            const data:SignIn = await res.json();
+            if (data.error_type === ERROR_TYPES.NOT_EXISTS_USER_ERROR) {
+              throw new CustomCredentialsSignin("パスワードまたはメールアドレスが間違っています。");
+            }
+            throw new Error("サーバーエラーが発生しました。時間をおいて再試行してください。");
           }
 
           const data:SignIn = await res.json();
@@ -33,13 +38,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             role: data.role ?? 'USER',
           };
 
-          if (user.id === undefined) {
-            return new CustomAuthError("NOT_EXISTS_USER_ERROR", "ユーザーが存在しません。");
+          if (!data.id) {
+            throw new Error("サーバーエラーが発生しました。時間をおいて再試行してください。");
           }
 
           return user;
         } catch (error) {
-            return new Error("エラーが発生しました。");  
+          // CustomCredentialsSigninはそのまま投げる
+          if (error instanceof CustomCredentialsSignin) {
+            throw error;
+          }
+          // その他のエラーは一般的な認証エラーとして投げる
+          throw error;
         }
       },
     })

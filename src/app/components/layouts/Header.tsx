@@ -43,10 +43,10 @@ export default function Header() {
             <SignOutButton />
           ) : (
             <>
-              <Link href="/auth/login" className="text-sm font-semibold leading-6 hover:text-blue-200 transition-colors">
+              <Link href="/login" className="text-sm font-semibold leading-6 hover:text-blue-200 transition-colors">
                 Login
               </Link>
-              <Link href="/auth/signup" className="text-sm font-semibold leading-6 hover:text-blue-200 transition-colors">
+              <Link href="/signup" className="text-sm font-semibold leading-6 hover:text-blue-200 transition-colors">
                 Sign Up
               </Link>
             </>

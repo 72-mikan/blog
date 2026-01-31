@@ -3,4 +3,5 @@ export interface SignIn {
   message: string;
   id: string;
   role: string;
+  error_type?: string;
 }

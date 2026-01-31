@@ -1,7 +1,18 @@
 import type { NextAuthConfig } from "next-auth";
+import { CredentialsSignin } from "next-auth";
 
 export const authConfig = {
   pages: { signIn: '/login' },
+  logger: {
+    error(err: Error) {
+      if (err instanceof CredentialsSignin) {
+        return; // 認証失敗は黙らせる
+      }
+      console.error(err);
+    },
+    warn: console.warn,
+    debug: () => {},
+  },
   session: {
       strategy: "jwt",
       maxAge: 30 * 24 * 60 * 60,
@@ -9,9 +20,10 @@ export const authConfig = {
   callbacks: {
     async authorized({ auth, request: { nextUrl } }) { // authはユーザーセッションが含まれる
       const isLoggedIn = !!auth?.user;  // ユーザーがログインしているか
-      const isOnCommonPage = nextUrl.pathname === '/' 
-        || nextUrl.pathname.startsWith('/about') 
-        || (nextUrl.pathname === '/blog' 
+      const isOnCommonPage = nextUrl.pathname === '/'
+        || nextUrl.pathname.startsWith('/about')
+        || nextUrl.pathname === '/signup'
+        || (nextUrl.pathname === '/blog'
           || (nextUrl.pathname.startsWith('/blog/') && !nextUrl.pathname.startsWith('/blog/create')))
       const isAdminPage = nextUrl.pathname.startsWith('/admin');
 
@@ -20,11 +32,11 @@ export const authConfig = {
           return true;
         }
         return false; // 管理者でなければアクセス不可
+      } else if (isLoggedIn && (nextUrl.pathname === '/login' || nextUrl.pathname === '/signup')) {
+        return Response.redirect(new URL('/', nextUrl));
       } else if (isOnCommonPage) {
         return true; // どちらでもアクセス可能
-      } else if (isLoggedIn && nextUrl.pathname === '/login' ) {
-        return Response.redirect(new URL('/', nextUrl));
-      } else if (isLoggedIn) {
+      }else if (isLoggedIn) {
         return true; // ログイン済みならアクセス可能
       }
 
