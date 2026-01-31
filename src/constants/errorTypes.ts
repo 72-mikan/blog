@@ -1,0 +1,7 @@
+export const ERROR_TYPES = {
+  SERVER_ERROR: 'SERVER_ERROR',
+  NOT_EXISTS_USER_ERROR: 'NOT_EXISTS_USER_ERROR',
+  EXIST_CHECK_FAILED: 'EXIST_CHECK_FAILED',
+} as const;
+
+export type ErrorType = typeof ERROR_TYPES[keyof typeof ERROR_TYPES];

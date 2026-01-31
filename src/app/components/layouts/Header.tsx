@@ -1,11 +1,13 @@
 'use client';
 
 import Link from "next/link";
-// import { useSession } from "next-auth/react";
 import SignOutButton from "@/app/components/layouts/SignOutButton";
+import { useSession } from "next-auth/react";
 
 export default function Header() {
-  // const { data: session } = useSession();
+  const { data: session } = useSession();
+  const isLoggedIn = !!session?.user;
+  console.log("Header session:", session);
 
   return (
     <header className="bg-blue-600 text-white shadow-lg">
@@ -37,18 +39,18 @@ export default function Header() {
           <Link href="/contacts" className="text-sm font-semibold leading-6 hover:text-blue-200 transition-colors">
             Contacts
           </Link>
-          {/* {session ? (
+          {isLoggedIn ? (
             <SignOutButton />
           ) : (
             <>
-              <Link href="/auth/login" className="text-sm font-semibold leading-6 hover:text-blue-200 transition-colors">
+              <Link href="/login" className="text-sm font-semibold leading-6 hover:text-blue-200 transition-colors">
                 Login
               </Link>
-              <Link href="/auth/signup" className="text-sm font-semibold leading-6 hover:text-blue-200 transition-colors">
+              <Link href="/signup" className="text-sm font-semibold leading-6 hover:text-blue-200 transition-colors">
                 Sign Up
               </Link>
             </>
-          )} */}
+          )}
         </div>
 
         {/* Mobile menu button */}
