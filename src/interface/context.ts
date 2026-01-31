@@ -4,5 +4,4 @@ export interface Context {
   tags: string[];
   context: string;
   isPublic: boolean;
-  token?: string;
 }

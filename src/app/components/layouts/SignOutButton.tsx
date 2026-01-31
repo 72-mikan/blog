@@ -2,13 +2,14 @@
 
 import { useTransition } from "react";
 import { customSignOut } from "@/lib/actions/signOut";
+import { UpdateSession } from "next-auth/react";
 
-export default function Header() {
+export default function SignOutButton() {
   const [isPending, startTransition] = useTransition();
 
   const signOut = () => {
-    startTransition(() => {
-      customSignOut();
+    startTransition(async () => {
+      await customSignOut();
     });
   };
 

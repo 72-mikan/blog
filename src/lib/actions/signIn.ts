@@ -2,8 +2,7 @@
 
 import {signInSchema } from '@/validations/signIn';
 import { signIn } from '@/auth'; // signIn関数のインポート
-import { AuthError } from "next-auth";
-import { CustomAuthError } from '@/class/CustomAuthError';
+import { handleAuthError } from './error';
 
 type ActionState = {
   success: boolean;
@@ -12,12 +11,16 @@ type ActionState = {
     password?: string[]|string;
     commom?: string;
   };
+  values?: {
+    email?: string;
+  };
 } | undefined;
 
 export async function submitSignInForm(
   state: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
+
   const email = formData.get('email');
   const password = formData.get('password');
 
@@ -27,63 +30,31 @@ export async function submitSignInForm(
   if (!validationResult.success) {
     // エラーメッセージの取得 flattenでエラーを見やすく加工
     const errors = validationResult.error.flatten();
-    console.log('サーバー側でエラー', errors);
     return {
       success: false,
       errors: {
         email: errors.fieldErrors.email?.[0] || [],
         password: errors.fieldErrors.password?.[0] || [],
+      },
+      values: {
+        email: email as string,
       }
     };
   }
 
   try {
     // サインイン処理
-    await signIn('credentials', formData);
+    await signIn('credentials', {
+      email: formData.get('email') as string,
+      password: formData.get('password') as string,
+      redirect: false,
+    });
+
+    return { success: true };
   } catch (error) {
-    if (error instanceof AuthError) {
-      switch (error.type) {
-        case 'CredentialsSignin':
-          return {
-            success: false,
-            errors: {
-              commom: 'メールアドレスまたはパスワードが正しくありません。'
-            }
-          };
-        default:
-          return {
-            success: false,
-            errors: {
-              commom: 'エラーが発生しました。'
-            }
-          };
-      }
-    } else if (error instanceof CustomAuthError) {
-      switch (error.type) {
-        case 'API_CONNECTION_ERROR':
-          return {
-            success: false,
-            errors: {
-              commom: 'エラーが発生しました。管理者に問い合わせてください。'
-            }
-          };
-        case 'NOT_EXISTS_USER_ERROR':
-          return {
-            success: false,
-            errors: {
-              commom: '入力されたメールアドレスは登録されていません。'
-            }
-          };
-        default:
-          return {
-            success: false,
-            errors: {
-              commom: 'メールアドレスまたはパスワードが正しくありません。'
-            }
-          };
-      }
-    }
-    throw error;
+    return handleAuthError(error, {
+      email: email as string,
+    });
   }
 
 }

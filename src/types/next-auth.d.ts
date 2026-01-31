@@ -4,24 +4,27 @@ import { JWT } from "next-auth/jwt";
 
 declare module "next-auth" {
   // User 型を拡張
-  interface User extends DefaultUser {
+  interface User {
     id?: string;
-    // role?: string; // ここに独自フィールドを追加
+    email?: string;
+    role?: string|null; // ここに独自フィールドを追加
   }
 
   // Session にも role を追加
-  interface Session {
+  interface Session extends DefaultSession {
     user: {
       id: string;
-      // role?: string;
-    } & DefaultSession["user"];
+      email: string;
+      role: string|null;
+    };
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
     id: string;
-    // role?: string;
+    email: string;
+    role: string|null;
   }
 }
 
