@@ -3,10 +3,12 @@
 import Link from "next/link";
 import SignOutButton from "@/app/components/layouts/SignOutButton";
 import { useSession } from "next-auth/react";
+import { USER_ROLE } from "@/constants/role";
 
 export default function Header() {
   const { data: session } = useSession();
   const isLoggedIn = !!session?.user;
+  const isAdmin = session?.user?.role === USER_ROLE.ADMIN;
   console.log("Header session:", session);
 
   return (
@@ -40,7 +42,14 @@ export default function Header() {
             Contacts
           </Link>
           {isLoggedIn ? (
-            <SignOutButton />
+            <>
+              {isAdmin && (
+                <Link href="/blogs/create" className="text-sm font-semibold leading-6 hover:text-blue-200 transition-colors">
+                  Post
+                </Link>
+              )}
+              <SignOutButton />
+            </>
           ) : (
             <>
               <Link href="/login" className="text-sm font-semibold leading-6 hover:text-blue-200 transition-colors">

@@ -1,5 +1,5 @@
 export interface Context {
-  id: number;
+  userId: string;
   title: string;
   tags: string[];
   context: string;
