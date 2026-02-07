@@ -44,9 +44,14 @@ export default function Header() {
           {isLoggedIn ? (
             <>
               {isAdmin && (
-                <Link href="/blogs/create" className="text-sm font-semibold leading-6 hover:text-blue-200 transition-colors">
-                  Post
-                </Link>
+                <>
+                  <Link href="/blogs/create" className="text-sm font-semibold leading-6 hover:text-blue-200 transition-colors">
+                    Post
+                  </Link>
+                  <Link href="/tags" className="text-sm font-semibold leading-6 hover:text-blue-200 transition-colors">
+                    Tags
+                  </Link>
+                </>
               )}
               <SignOutButton />
             </>
