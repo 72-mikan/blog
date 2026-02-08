@@ -1,9 +1,9 @@
 'use server'
 
-import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { ApiConnectError } from "@/class/error/ApiConnectError";
 import { createBlogSchema } from "@/validations/blogs/upsert";
+import { revalidatePath } from "next/cache";
 
 type ActionState = {
   success: boolean;
@@ -20,7 +20,8 @@ type ActionState = {
   };
 } | undefined;
 
-export async function createBlogPost(
+export async function updateBlogPost(
+  blogId: number,
   state: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
@@ -66,11 +67,12 @@ export async function createBlogPost(
 
   try {
     const res = await fetch(`${process.env.URL}/api/blogs`, {
-      method: "POST",
+      method: "PUT",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
+        id: blogId,
         userId: session.user.id,
         title: title,
         tags: tags,
@@ -78,13 +80,18 @@ export async function createBlogPost(
         isPublic: isPublic ? true : false,
       }),
     });
-    // レスポンスが正常でなければnullを返す
+
     if (!res.ok) {
-      const data =  await res.json();
-      // API接続エラー
+      const data = await res.json();
       throw new ApiConnectError(data.errors.error || 'API接続エラーが発生しました。');
     }
 
+    revalidatePath(`/blogs/${blogId}`);
+    revalidatePath('/blogs');
+    return {
+      success: true,
+      errors: {},
+    };
   } catch (e) {
     if (e instanceof ApiConnectError) {
       return {
@@ -99,6 +106,16 @@ export async function createBlogPost(
         },
       };
     }
+    return {
+      success: false,
+      errors: {
+        error: 'エラーが発生しました。',
+      },
+      formData: {
+        title: String(title || ''),
+        tag: String(tag || ''),
+        context: String(context || ''),
+      },
+    };
   }
-  redirect(`/blogs`);
 }

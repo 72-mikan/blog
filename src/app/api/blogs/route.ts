@@ -80,3 +80,82 @@ export async function POST(req: Request) {
     );
   }
 }
+
+export async function PUT(req: Request) {
+  try {
+    const data: Context & { id: number } = await req.json();
+
+    if (!data.id) {
+      throw new BadRequestError('ブログIDが必要です。');
+    }
+
+    if (!data.userId) {
+      throw new BadRequestError('ユーザーIDが必要です。');
+    }
+
+    const user = await prisma.user.findFirst({
+      where: {
+        id: data.userId,
+        role: 'ADMIN'
+      }
+    });
+
+    if (!user) {
+      throw new ForbiddenError('管理者権限がありません。');
+    }
+
+    const blog = await prisma.context.findUnique({
+      where: { id: data.id },
+    });
+
+    if (!blog) {
+      throw new BadRequestError('ブログが見つかりません。');
+    }
+
+    const existingTags = await prisma.tag.findMany({
+      where: {
+        name: { in: data.tags },
+      },
+    });
+
+    if (existingTags.length !== data.tags.length) {
+      throw new BadRequestError('タグが存在しません。');
+    }
+
+    await prisma.context.update({
+      where: { id: data.id },
+      data: {
+        title: data.title,
+        context: data.context,
+        isPublic: data.isPublic,
+        tags: {
+          set: [],
+          connect: data.tags.map((tag) => ({ name: tag })),
+        },
+      },
+    });
+
+    return new Response('ブログが更新されました。', { status: 200 });
+  } catch (e) {
+    if (e instanceof UnauthorizedError ||
+        e instanceof ForbiddenError ||
+        e instanceof BadRequestError) {
+          return new Response(
+            JSON.stringify({
+              errors: {
+                error: e.message
+              }
+            })
+            , { status: e.status }
+          );
+    }
+    return new Response(
+      JSON.stringify({
+        errors: {
+          error: 'サーバーエラーが発生しました。'
+        }
+      })
+      , { status: 500 }
+    );
+  }
+}
