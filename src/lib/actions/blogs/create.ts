@@ -65,7 +65,7 @@ export async function createBlogPost(
   }
 
   try {
-    const res = await fetch(`${process.env.URL}/api/blog`, {
+    const res = await fetch(`${process.env.URL}/api/blogs`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
