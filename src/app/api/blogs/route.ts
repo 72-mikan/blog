@@ -4,6 +4,52 @@ import type { Context } from '@/interface/context';
 import { UnauthorizedError } from '@/class/error/UnauthorizedError';
 import { ForbiddenError } from '@/class/error/ForbiddenError';
 import { BadRequestError } from '@/class/error/BadRequestError';
+import { auth } from '@/auth';
+
+export async function GET(req: Request) {
+  try {
+    const session = await auth();
+    const isAdmin = session?.user?.role === 'ADMIN';
+
+    const blogs = await prisma.context.findMany({
+      where: isAdmin ? {} : { isPublic: true },
+      select: {
+        id: true,
+        title: true,
+        context: true,
+        isPublic: true,
+        createdAt: true,
+        user: {
+          select: {
+            name: true,
+          },
+        },
+        tags: {
+          select: {
+            name: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    return new Response(JSON.stringify(blogs), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch (e) {
+    return new Response(
+      JSON.stringify({
+        errors: {
+          error: 'サーバーエラーが発生しました。',
+        },
+      }),
+      { status: 500 }
+    );
+  }
+}
 
 export async function POST(req: Request) {
   try {
