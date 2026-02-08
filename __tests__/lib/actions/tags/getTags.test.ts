@@ -6,6 +6,7 @@ describe('getTags', () => {
   beforeEach(() => {
     vi.resetAllMocks();
     global.fetch = vi.fn();
+    vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   describe('正常系のテスト', () => {
