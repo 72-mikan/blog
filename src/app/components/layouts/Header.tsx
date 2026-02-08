@@ -9,7 +9,6 @@ export default function Header() {
   const { data: session } = useSession();
   const isLoggedIn = !!session?.user;
   const isAdmin = session?.user?.role === USER_ROLE.ADMIN;
-  console.log("Header session:", session);
 
   return (
     <header className="bg-blue-600 text-white shadow-lg">
@@ -32,8 +31,8 @@ export default function Header() {
           <Link href="/" className="text-sm font-semibold leading-6 hover:text-blue-200 transition-colors">
             Home
           </Link>
-          <Link href="/blog" className="text-sm font-semibold leading-6 hover:text-blue-200 transition-colors">
-            Blog
+          <Link href="/blogs" className="text-sm font-semibold leading-6 hover:text-blue-200 transition-colors">
+            Blogs
           </Link>
           <Link href="/about" className="text-sm font-semibold leading-6 hover:text-blue-200 transition-colors">
             About
