@@ -7,6 +7,7 @@ type ActionState = {
   success: boolean;
   errors: {
     name?: string[] | string;
+    image?: string;
     error?: string;
   };
 } | undefined;
@@ -14,6 +15,7 @@ type ActionState = {
 export async function updateTag(
   id: number,
   name: string,
+  imageFile?: File | null,
 ): Promise<ActionState> {
   // Zod バリデーション
   const validationResult = upsertTagSchema.safeParse({ name });
@@ -29,12 +31,16 @@ export async function updateTag(
   }
 
   try {
+    const formData = new FormData();
+    formData.append('id', String(id));
+    formData.append('name', validationResult.data.name);
+    if (imageFile && imageFile.size > 0) {
+      formData.append('image', imageFile);
+    }
+
     const response = await fetch(`${process.env.URL}/api/tags`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ id, name: validationResult.data.name }),
+      body: formData,
     });
 
     const data = await response.json();
@@ -51,7 +57,7 @@ export async function updateTag(
         errors: { error: data.errors?.error || "タグの更新に失敗しました" },
       };
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
       errors: { error: "タグの更新に失敗しました" },

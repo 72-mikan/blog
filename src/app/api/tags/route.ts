@@ -4,6 +4,7 @@ import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { BadRequestError } from '@/class/error/BadRequestError';
 import { UnauthorizedError } from '@/class/error/UnauthorizedError';
 import { auth } from '@/auth';
+import { saveImage } from '@/utils/image';
 
 // GET: タグ一覧取得
 export async function GET() {
@@ -37,15 +38,26 @@ export async function POST(req: Request) {
       throw new UnauthorizedError('認証が必要です');
     }
 
-    const { name } = await req.json();
+    const formData = await req.formData();
+    const name = formData.get('name');
+    const imageFile = formData.get('image') as File | null;
 
-    if (!name || name.trim() === '') {
+    if (!name || typeof name !== 'string' || name.trim() === '') {
       throw new BadRequestError('タグ名を入力してください');
+    }
+
+    let imagePath: string | null = null;
+    if (imageFile && imageFile.size > 0) {
+      imagePath = await saveImage(imageFile, 'tags');
+      if (!imagePath) {
+        throw new BadRequestError('画像のアップロードに失敗しました');
+      }
     }
 
     const tag = await prisma.tag.create({
       data: {
         name: name.trim(),
+        imagePath: imagePath,
       },
     });
 
@@ -80,20 +92,32 @@ export async function PUT(req: Request) {
       throw new UnauthorizedError('認証が必要です');
     }
 
-    const { id, name } = await req.json();
+    const formData = await req.formData();
+    const id = formData.get('id');
+    const name = formData.get('name');
+    const imageFile = formData.get('image') as File | null;
 
-    if (!id) {
+    if (!id || typeof id !== 'string') {
       throw new BadRequestError('タグIDが必要です');
     }
 
-    if (!name || name.trim() === '') {
+    if (!name || typeof name !== 'string' || name.trim() === '') {
       throw new BadRequestError('タグ名を入力してください');
+    }
+
+    let imagePath: string | null | undefined = undefined;
+    if (imageFile && imageFile.size > 0) {
+      imagePath = await saveImage(imageFile, 'tags');
+      if (!imagePath) {
+        throw new BadRequestError('画像のアップロードに失敗しました');
+      }
     }
 
     const tag = await prisma.tag.update({
       where: { id: Number(id) },
       data: {
         name: name.trim(),
+        imagePath: imagePath !== undefined ? imagePath : undefined,
       },
     });
 

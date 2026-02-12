@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET, POST, PUT, DELETE } from '@/app/api/tags/route';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
+import { saveImage } from '@/utils/image';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import dotenv from "dotenv";
 
@@ -21,6 +22,39 @@ vi.mock('@/lib/prisma', () => ({
 vi.mock('@/auth', () => ({
   auth: vi.fn(),
 }));
+
+vi.mock('@/utils/image', () => ({
+  saveImage: vi.fn(),
+}));
+
+vi.mock('@/lib/supabase', () => ({
+  supabase: {
+    storage: {
+      from: vi.fn(() => ({
+        upload: vi.fn(),
+        getPublicUrl: vi.fn(),
+      })),
+    },
+  },
+}));
+
+const createFormRequest = (
+  method: 'POST' | 'PUT',
+  fields: Record<string, string>,
+  file?: File,
+) => {
+  const formData = new FormData();
+  Object.entries(fields).forEach(([key, value]) => {
+    formData.append(key, value);
+  });
+  if (file) {
+    formData.append('image', file);
+  }
+  return new Request(`${process.env.URL}/api/tags`, {
+    method,
+    body: formData,
+  });
+};
 
 describe('/api/tags route handlers', () => {
   beforeEach(() => {
@@ -56,10 +90,7 @@ describe('/api/tags route handlers', () => {
     it('認証されていない場合は401を返す', async () => {
       (auth as any).mockResolvedValue(null);
 
-      const request = new Request(`${process.env.URL}/api/tags`, {
-        method: 'POST',
-        body: JSON.stringify({ name: 'React' }),
-      });
+      const request = createFormRequest('POST', { name: 'React' });
 
       const response = await POST(request);
       const data = await response.json();
@@ -71,10 +102,7 @@ describe('/api/tags route handlers', () => {
     it('タグ名が空の場合は400を返す', async () => {
       (auth as any).mockResolvedValue({ user: { id: 'user-1' } });
 
-      const request = new Request(`${process.env.URL}/api/tags`, {
-        method: 'POST',
-        body: JSON.stringify({ name: '' }),
-      });
+      const request = createFormRequest('POST', { name: '' });
 
       const response = await POST(request);
       const data = await response.json();
@@ -93,10 +121,7 @@ describe('/api/tags route handlers', () => {
         })
       );
 
-      const request = new Request(`${process.env.URL}/api/tags`, {
-        method: 'POST',
-        body: JSON.stringify({ name: 'React' }),
-      });
+      const request = createFormRequest('POST', { name: 'React' });
 
       const response = await POST(request);
       const data = await response.json();
@@ -109,10 +134,7 @@ describe('/api/tags route handlers', () => {
       (auth as any).mockResolvedValue({ user: { id: 'user-1' } });
       (prisma.tag.create as any).mockResolvedValue({ id: 1, name: 'React' });
 
-      const request = new Request(`${process.env.URL}/api/tags`, {
-        method: 'POST',
-        body: JSON.stringify({ name: 'React' }),
-      });
+      const request = createFormRequest('POST', { name: 'React' });
 
       const response = await POST(request);
       const data = await response.json();
@@ -121,16 +143,49 @@ describe('/api/tags route handlers', () => {
       expect(data).toEqual({ id: 1, name: 'React' });
       expect(prisma.tag.create).toHaveBeenCalled();
     });
+
+    // it('画像付きのPOSTでsaveImageが呼ばれてimagePathが保存される', async () => {
+    //   (auth as any).mockResolvedValue({ user: { id: 'user-1' } });
+    //   (saveImage as any).mockResolvedValue('/tags/123_test.png');
+    //   (prisma.tag.create as any).mockResolvedValue({ id: 1, name: 'React', imagePath: '/tags/123_test.png' });
+
+    //   const file = new File([new Uint8Array([1, 2, 3])], 'test.png', { type: 'image/png' });
+    //   const request = createFormRequest('POST', { name: 'React' }, file);
+
+    //   const response = await POST(request);
+    //   const data = await response.json();
+
+    //   expect(response.status).toBe(201);
+    //   expect(data).toEqual({ id: 1, name: 'React', imagePath: '/tags/123_test.png' });
+    //   expect(saveImage).toHaveBeenCalledWith(file, 'tags');
+    //   expect(prisma.tag.create).toHaveBeenCalledWith({
+    //     data: {
+    //       name: 'React',
+    //       imagePath: '/tags/123_test.png',
+    //     },
+    //   });
+    // });
+
+    it('画像保存に失敗した場合は400を返す', async () => {
+      (auth as any).mockResolvedValue({ user: { id: 'user-1' } });
+      (saveImage as any).mockResolvedValue(null);
+
+      const file = new File([new Uint8Array([1, 2, 3])], 'test.png', { type: 'image/png' });
+      const request = createFormRequest('POST', { name: 'React' }, file);
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.errors.error).toBe('画像のアップロードに失敗しました');
+    });
   });
 
   describe('PUT', () => {
     it('認証されていない場合は401を返す', async () => {
       (auth as any).mockResolvedValue(null);
 
-      const request = new Request(`${process.env.URL}/api/tags`, {
-        method: 'PUT',
-        body: JSON.stringify({ id: 1, name: 'Vue' }),
-      });
+      const request = createFormRequest('PUT', { id: '1', name: 'Vue' });
 
       const response = await PUT(request);
       const data = await response.json();
@@ -142,10 +197,7 @@ describe('/api/tags route handlers', () => {
     it('タグIDがない場合は400を返す', async () => {
       (auth as any).mockResolvedValue({ user: { id: 'user-1' } });
 
-      const request = new Request(`${process.env.URL}/api/tags`, {
-        method: 'PUT',
-        body: JSON.stringify({ name: 'Vue' }),
-      });
+      const request = createFormRequest('PUT', { name: 'Vue' });
 
       const response = await PUT(request);
       const data = await response.json();
@@ -157,10 +209,7 @@ describe('/api/tags route handlers', () => {
     it('タグ名が空の場合は400を返す', async () => {
       (auth as any).mockResolvedValue({ user: { id: 'user-1' } });
 
-      const request = new Request(`${process.env.URL}/api/tags`, {
-        method: 'PUT',
-        body: JSON.stringify({ id: 1, name: '' }),
-      });
+      const request = createFormRequest('PUT', { id: '1', name: '' });
 
       const response = await PUT(request);
       const data = await response.json();
@@ -179,10 +228,7 @@ describe('/api/tags route handlers', () => {
         })
       );
 
-      const request = new Request(`${process.env.URL}/api/tags`, {
-        method: 'PUT',
-        body: JSON.stringify({ id: 1, name: 'Vue' }),
-      });
+      const request = createFormRequest('PUT', { id: '1', name: 'Vue' });
 
       const response = await PUT(request);
       const data = await response.json();
@@ -195,10 +241,7 @@ describe('/api/tags route handlers', () => {
       (auth as any).mockResolvedValue({ user: { id: 'user-1' } });
       (prisma.tag.update as any).mockResolvedValue({ id: 1, name: 'Vue' });
 
-      const request = new Request(`${process.env.URL}/api/tags`, {
-        method: 'PUT',
-        body: JSON.stringify({ id: 1, name: 'Vue' }),
-      });
+      const request = createFormRequest('PUT', { id: '1', name: 'Vue' });
 
       const response = await PUT(request);
       const data = await response.json();
@@ -207,6 +250,29 @@ describe('/api/tags route handlers', () => {
       expect(data).toEqual({ id: 1, name: 'Vue' });
       expect(prisma.tag.update).toHaveBeenCalled();
     });
+
+    // it('画像付きのPUTでsaveImageが呼ばれてimagePathが保存される', async () => {
+    //   (auth as any).mockResolvedValue({ user: { id: 'user-1' } });
+    //   (saveImage as any).mockResolvedValue('/tags/456_test.png');
+    //   (prisma.tag.update as any).mockResolvedValue({ id: 1, name: 'Vue', imagePath: '/tags/456_test.png' });
+
+    //   const file = new File([new Uint8Array([4, 5, 6])], 'test.png', { type: 'image/png' });
+    //   const request = createFormRequest('PUT', { id: '1', name: 'Vue' }, file);
+
+    //   const response = await PUT(request);
+    //   const data = await response.json();
+
+    //   expect(response.status).toBe(200);
+    //   expect(data).toEqual({ id: 1, name: 'Vue', imagePath: '/tags/456_test.png' });
+    //   expect(saveImage).toHaveBeenCalledWith(file, 'tags');
+    //   expect(prisma.tag.update).toHaveBeenCalledWith({
+    //     where: { id: 1 },
+    //     data: {
+    //       name: 'Vue',
+    //       imagePath: '/tags/456_test.png',
+    //     },
+    //   });
+    // });
   });
 
   describe('DELETE', () => {

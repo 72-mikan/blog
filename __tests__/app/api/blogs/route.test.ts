@@ -69,7 +69,14 @@ describe('GET /api/blogs', () => {
       expect(data[1].title).toBe('非公開記事');
       expect(prisma.context.findMany).toHaveBeenCalledWith({
         where: {},
-        select: expect.any(Object),
+        select: expect.objectContaining({
+          tags: {
+            select: {
+              name: true,
+              imagePath: true,
+            },
+          },
+        }),
         orderBy: { createdAt: 'desc' },
       });
     });
@@ -103,7 +110,14 @@ describe('GET /api/blogs', () => {
       expect(data[0].isPublic).toBe(true);
       expect(prisma.context.findMany).toHaveBeenCalledWith({
         where: { isPublic: true },
-        select: expect.any(Object),
+        select: expect.objectContaining({
+          tags: {
+            select: {
+              name: true,
+              imagePath: true,
+            },
+          },
+        }),
         orderBy: { createdAt: 'desc' },
       });
     });
@@ -136,7 +150,14 @@ describe('GET /api/blogs', () => {
       expect(data).toHaveLength(1);
       expect(prisma.context.findMany).toHaveBeenCalledWith({
         where: { isPublic: true },
-        select: expect.any(Object),
+        select: expect.objectContaining({
+          tags: {
+            select: {
+              name: true,
+              imagePath: true,
+            },
+          },
+        }),
         orderBy: { createdAt: 'desc' },
       });
     });

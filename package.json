@@ -13,6 +13,7 @@
   "dependencies": {
     "@headlessui/react": "^2.2.9",
     "@prisma/client": "^6.19.0",
+    "@supabase/supabase-js": "^2.95.3",
     "@tailwindcss/typography": "^0.5.19",
     "@types/bcrypt": "^6.0.0",
     "bcrypt": "^6.0.0",
