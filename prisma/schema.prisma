@@ -47,6 +47,7 @@ model Tag {
   id        Int       @id @default(autoincrement())
   contexts  Context[]
   name      String    @unique
+  imagePath String?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 }

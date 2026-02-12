@@ -6,6 +6,7 @@ type ActionState = {
   success: boolean;
   errors: {
     name?: string[] | string;
+    image?: string;
     error?: string;
   };
   formData?: {
@@ -33,13 +34,12 @@ export async function createTag(
     };
   }
 
+  formData.set('name', validationResult.data.name);
+
   try {
     const response = await fetch(`${process.env.URL}/api/tags`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ name: validationResult.data.name }),
+      body: formData,
     });
 
     const data = await response.json();
@@ -56,7 +56,7 @@ export async function createTag(
         formData: { name }
       };
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
       errors: { error: "タグの作成に失敗しました" },

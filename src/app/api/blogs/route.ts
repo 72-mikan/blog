@@ -27,6 +27,7 @@ export async function GET(req: Request) {
         tags: {
           select: {
             name: true,
+            imagePath: true,
           },
         },
       },

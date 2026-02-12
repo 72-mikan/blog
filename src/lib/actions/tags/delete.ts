@@ -29,7 +29,7 @@ export async function deleteTag(id: number): Promise<ActionState> {
         errors: { error: data.errors?.error || "タグの削除に失敗しました" },
       };
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
       errors: { error: "タグの削除に失敗しました" },

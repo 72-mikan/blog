@@ -16,6 +16,7 @@ interface Blog {
   };
   tags: Array<{
     name: string;
+    imagePath?: string | null;
   }>;
 }
 
@@ -88,7 +89,7 @@ export default function BlogPages() {
                   {/* 左側の画像 */}
                   <div className="flex-shrink-0">
                     <Image
-                      src="/blogs/no-image.png"
+                      src={blog.tags[0]?.imagePath || '/tags/no-image.png'}
                       alt={blog.title}
                       width={60}
                       height={60}
