@@ -73,6 +73,7 @@ export default function TagsClient({ initialTags }: TagsClientProps) {
       const response = await fetch('/api/tags', {
         method: 'POST',
         body: formData,
+        next: { revalidate: 60 },
       });
 
       const data = await response.json();
@@ -115,6 +116,7 @@ export default function TagsClient({ initialTags }: TagsClientProps) {
       const response = await fetch('/api/tags', {
         method: 'PUT',
         body: formData,
+        next: { revalidate: 60 },
       });
 
       const data = await response.json();
@@ -147,6 +149,7 @@ export default function TagsClient({ initialTags }: TagsClientProps) {
     try {
       const response = await fetch(`/api/tags?id=${id}`, {
         method: 'DELETE',
+        next: { revalidate: 60 }
       });
 
       if (response.ok) {
