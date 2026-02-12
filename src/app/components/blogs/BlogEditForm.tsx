@@ -22,6 +22,9 @@ export default function BlogEditForm({ blog }: BlogEditFormProps) {
   const [publicState, setPublicState] = useState(blog.isPublic ? '公開' : '非公開');
   const router = useRouter();
   type UpdateBlogPostState = Awaited<ReturnType<typeof updateBlogPost>>;
+  const normalizedMarkdown = markdownState
+    .replace(/^'''([\w-]*)\s*$/gm, '```$1')
+    .replace(/^｀｀｀([\w-]*)\s*$/gm, '```$1');
   
   const [state, formAction, isPending] = useActionState(
     (state: UpdateBlogPostState, formData: FormData) => updateBlogPost(blog.id, state, formData),
@@ -143,7 +146,7 @@ export default function BlogEditForm({ blog }: BlogEditFormProps) {
               </div>
               <div className="prose prose-sm max-w-none p-4 leading-snug prose-headings:mt-2 prose-headings:mb-1">
                 <Markdown remarkPlugins={[remarkGfm, remarkBreaks]}>
-                  {markdownState}
+                  {normalizedMarkdown}
                 </Markdown>
               </div>
             </div>
