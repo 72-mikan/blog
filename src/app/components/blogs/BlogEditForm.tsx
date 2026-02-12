@@ -21,9 +21,10 @@ export default function BlogEditForm({ blog }: BlogEditFormProps) {
   const [markdownState, setMarkdownState] = useState(blog.context);
   const [publicState, setPublicState] = useState(blog.isPublic ? '公開' : '非公開');
   const router = useRouter();
+  type UpdateBlogPostState = Awaited<ReturnType<typeof updateBlogPost>>;
   
   const [state, formAction, isPending] = useActionState(
-    (state: any, formData: FormData) => updateBlogPost(blog.id, state, formData),
+    (state: UpdateBlogPostState, formData: FormData) => updateBlogPost(blog.id, state, formData),
     undefined,
   );
 
