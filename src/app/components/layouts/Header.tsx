@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from "react";
 import Link from "next/link";
 import SignOutButton from "@/app/components/layouts/SignOutButton";
 import { useSession } from "next-auth/react";
@@ -7,6 +8,7 @@ import { USER_ROLE } from "@/constants/role";
 
 export default function Header() {
   const { data: session } = useSession();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const isLoggedIn = !!session?.user;
   const isAdmin = session?.user?.role === USER_ROLE.ADMIN;
 
@@ -71,7 +73,8 @@ export default function Header() {
           <button
             type="button"
             className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-white hover:bg-blue-700 transition-colors"
-            // TODO: Implement mobile menu toggle
+            aria-expanded={isMobileMenuOpen}
+            onClick={() => setIsMobileMenuOpen((prev) => !prev)}
           >
             <span className="sr-only">Open main menu</span>
             <svg className="size-6" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
@@ -81,10 +84,49 @@ export default function Header() {
         </div>
       </nav>
 
-      {/* Mobile Navigation - TODO: Implement collapsible menu */}
-      <div className="lg:hidden">
-        {/* Mobile menu items would go here */}
-      </div>
+      {/* Mobile Navigation */}
+      {isMobileMenuOpen && (
+        <div className="lg:hidden border-t border-blue-500 px-4 pb-4">
+          <div className="flex flex-col gap-3 pt-4">
+            <Link href="/" className="text-sm font-semibold leading-6 hover:text-blue-200 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
+              Home
+            </Link>
+            <Link href="/blogs" className="text-sm font-semibold leading-6 hover:text-blue-200 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
+              Blogs
+            </Link>
+            <Link href="/about" className="text-sm font-semibold leading-6 hover:text-blue-200 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
+              About
+            </Link>
+            <Link href="/contacts" className="text-sm font-semibold leading-6 hover:text-blue-200 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
+              Contacts
+            </Link>
+            {isLoggedIn ? (
+              <>
+                {isAdmin && (
+                  <>
+                    <Link href="/blogs/create" className="text-sm font-semibold leading-6 hover:text-blue-200 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
+                      Post
+                    </Link>
+                    <Link href="/tags" className="text-sm font-semibold leading-6 hover:text-blue-200 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
+                      Tags
+                    </Link>
+                  </>
+                )}
+                <SignOutButton />
+              </>
+            ) : (
+              <>
+                <Link href="/login" className="text-sm font-semibold leading-6 hover:text-blue-200 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
+                  Login
+                </Link>
+                <Link href="/signup" className="text-sm font-semibold leading-6 hover:text-blue-200 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
+                  Sign Up
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </header>
   );
 }
