@@ -15,7 +15,7 @@ export const authConfig = {
   },
   session: {
       strategy: "jwt",
-      maxAge: 30 * 24 * 60 * 60,
+      maxAge: 60 * 60,
   },
   callbacks: {
     async authorized({ auth, request: { nextUrl } }) { // authはユーザーセッションが含まれる
@@ -23,8 +23,8 @@ export const authConfig = {
       const isOnCommonPage = nextUrl.pathname === '/'
         || nextUrl.pathname.startsWith('/about')
         || nextUrl.pathname === '/signup'
-        || (nextUrl.pathname === '/blog'
-          || (nextUrl.pathname.startsWith('/blog/') && !nextUrl.pathname.startsWith('/blog/create')))
+        || (nextUrl.pathname === '/blogs'
+          || (nextUrl.pathname.startsWith('/blogs/') && !nextUrl.pathname.startsWith('/blogs/create')))
       const isAdminPage = nextUrl.pathname.startsWith('/admin');
 
       if (isAdminPage) {
