@@ -1,33 +1,20 @@
-import { prisma } from '@/lib/prisma';
+import { auth } from '@/auth';
 import { saveImage } from '@/utils/image';
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 
 export async function POST(req: Request) {
   try {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+      return Response.json(
+        { errors: { error: '認証が必要です。' } },
+        { status: 401 }
+      );
+    }
+
     const formData = await req.formData();
-    const userId = formData.get('userId');
-
-    if (!userId || typeof userId !== 'string') {
-      return Response.json(
-        { errors: { error: 'ユーザーIDが必要です。' } },
-        { status: 400 }
-      );
-    }
-
-    const user = await prisma.user.findFirst({
-      where: {
-        id: userId,
-        role: 'ADMIN',
-      },
-    });
-
-    if (!user) {
-      return Response.json(
-        { errors: { error: '管理者権限がありません。' } },
-        { status: 403 }
-      );
-    }
 
     const imageFile = formData.get('image');
 
@@ -51,7 +38,6 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
-    console.log('test');
     const imagePath = await saveImage(imageFile, 'blogs/temp');
 
     if (!imagePath) {
