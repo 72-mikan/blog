@@ -7,8 +7,11 @@ dotenv.config();
 
 // 環境によってローカル保存とsupabase保存を切り替えるようにする
 export async function saveImage(file: File, uploadPath: string): Promise<string | null> {
+  console.log('test2');
     const useSupabase = process.env.NEXT_PUBLIC_USE_SUPABASE_STORAGE === 'true';
+  console.log('test3');
     if (useSupabase) {
+      console.log('test4');
         return await saveImageToSupabase(file);
     } else {
         return await saveImageToLocal(file, uploadPath);
@@ -33,6 +36,7 @@ export async function saveImageToLocal(file: File, uploadPath: string): Promise<
 }
 
 async function saveImageToSupabase(file: File): Promise<string | null> {
+  console.log('test5');
   const fileName = `${Date.now()}_${file.name}`;
   const { error } = await supabase.storage
     .from('blog_bucket')
