@@ -51,7 +51,7 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
-
+    console.log('test');
     const imagePath = await saveImage(imageFile, 'blogs/temp');
 
     if (!imagePath) {
