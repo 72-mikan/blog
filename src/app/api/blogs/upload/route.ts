@@ -7,6 +7,25 @@ export async function POST(req: Request) {
   try {
     console.info(`[blogs/upload][${traceId}] POST処理を開始しました`);
 
+    const contentType = req.headers.get('content-type') ?? '';
+    console.info(`[blogs/upload][${traceId}] Content-Type: ${contentType || '(empty)'}`);
+
+    if (!contentType.toLowerCase().startsWith('multipart/form-data')) {
+      console.warn(`[blogs/upload][${traceId}] Content-Typeがmultipart/form-dataではありません`);
+      return Response.json(
+        { errors: { error: 'リクエスト形式が不正です。multipart/form-dataで送信してください。' } },
+        { status: 400 }
+      );
+    }
+
+    if (!contentType.toLowerCase().includes('boundary=')) {
+      console.warn(`[blogs/upload][${traceId}] boundaryが見つかりません`);
+      return Response.json(
+        { errors: { error: 'multipart/form-dataのboundaryが不足しています。' } },
+        { status: 400 }
+      );
+    }
+
     const formData = await req.formData();
     console.info(`[blogs/upload][${traceId}] formDataの解析が完了しました`);
 
