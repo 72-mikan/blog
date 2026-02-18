@@ -3,12 +3,16 @@
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
-import { useEffect, useState, useActionState } from 'react';
-import { createBlogPost } from '@/lib/actions/blogs/create';
+import { useEffect, useState, useActionState, useRef } from 'react';
+import { createBlogPost, uploadBlogImageForCreate } from '@/lib/actions/blogs/create';
 
 export default function BlogCreatePage() {
   const [markdownState, setMarkdownState] = useState('');
   const [publicState, setPublicState] = useState('非公開');
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [imageUploadError, setImageUploadError] = useState<string | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [state, formAction, isPending] = useActionState( 
       createBlogPost,
       undefined,
@@ -20,6 +24,71 @@ export default function BlogCreatePage() {
       setMarkdownState(state.formData.context);
     }
   }, [state?.formData?.context]);
+
+  const uploadImageAndInsertMarkdown = async (file: File) => {
+    setImageUploadError(null);
+    setIsUploadingImage(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const result = await uploadBlogImageForCreate(formData);
+
+      if (!result.success || !result.url) {
+        throw new Error(result.error || '画像アップロードに失敗しました。');
+      }
+
+      const imageUrl = result.url;
+
+      if (!imageUrl) {
+        throw new Error('画像URLの取得に失敗しました。');
+      }
+
+      const textarea = textareaRef.current;
+      if (!textarea) {
+        const appended = `${markdownState}\n![image](${imageUrl})\n`;
+        setMarkdownState(appended);
+        return;
+      }
+
+      const selectionStart = textarea.selectionStart;
+      const selectionEnd = textarea.selectionEnd;
+      const markdownImage = `![image](${imageUrl})`;
+
+      const updatedValue =
+        markdownState.slice(0, selectionStart) +
+        markdownImage +
+        markdownState.slice(selectionEnd);
+
+      setMarkdownState(updatedValue);
+
+      requestAnimationFrame(() => {
+        const nextCursor = selectionStart + markdownImage.length;
+        textarea.focus();
+        textarea.setSelectionRange(nextCursor, nextCursor);
+      });
+    } catch (error) {
+      setImageUploadError(
+        error instanceof Error ? error.message : '画像アップロード中にエラーが発生しました。'
+      );
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  const handleDropImage = async (event: React.DragEvent<HTMLTextAreaElement>) => {
+    event.preventDefault();
+    setIsDragOver(false);
+
+    const file = event.dataTransfer.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    await uploadImageAndInsertMarkdown(file);
+  };
 
   return (
     <form action={formAction} className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
@@ -82,6 +151,9 @@ export default function BlogCreatePage() {
               <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
                 <span className="text-sm font-semibold text-slate-700">Markdownエディタ</span>
                 <div className="flex items-center gap-3">
+                  {isUploadingImage && (
+                    <span className="text-xs font-medium text-blue-600">画像アップロード中...</span>
+                  )}
                   <label className="relative inline-flex h-6 w-11 cursor-pointer items-center">
                     <input
                       type="checkbox"
@@ -100,15 +172,30 @@ export default function BlogCreatePage() {
               <div className="p-4">
                 <label htmlFor="comment" className="sr-only">本文</label>
                 <textarea
+                  ref={textareaRef}
                   value={markdownState}
                   onChange={(e) => setMarkdownState(e.target.value)}
+                  onDrop={handleDropImage}
+                  onDragOver={(event) => {
+                    event.preventDefault();
+                    setIsDragOver(true);
+                  }}
+                  onDragLeave={() => setIsDragOver(false)}
                   name="context"
                   id="comment"
                   rows={22}
-                  className="block w-full resize-none rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  className={`block w-full resize-none rounded-lg border bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 ${
+                    isDragOver ? 'border-blue-400 ring-2 ring-blue-200' : 'border-slate-200'
+                  }`}
                   placeholder="Write a context..."
                   required
                 />
+                <p className="mt-2 text-xs text-slate-500">
+                  画像を本文エリアにドラッグ&ドロップするとアップロードされ、Markdown画像URLが挿入されます。
+                </p>
+                {imageUploadError && (
+                  <p className="mt-2 text-xs text-red-600">{imageUploadError}</p>
+                )}
               </div>
             </div>
 
