@@ -1,18 +1,9 @@
-import { auth } from '@/auth';
 import { saveImage } from '@/utils/image';
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 
 export async function POST(req: Request) {
   try {
-    const session = await auth();
-
-    if (!session?.user?.id) {
-      return Response.json(
-        { errors: { error: '認証が必要です。' } },
-        { status: 401 }
-      );
-    }
 
     const formData = await req.formData();
 
