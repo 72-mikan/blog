@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { ApiConnectError } from "@/class/error/ApiConnectError";
 import { createBlogSchema } from "@/validations/blogs/upsert";
 import { revalidatePath } from "next/cache";
+import { saveImage } from "@/utils/image";
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 
@@ -161,34 +162,10 @@ export async function uploadBlogImageForUpdate(formData: FormData): Promise<Uplo
     };
   }
 
-  if (!process.env.URL) {
-    return {
-      success: false,
-      error: 'API接続先URLが設定されていません。',
-    };
-  }
-
-  const payload = new FormData();
-  payload.append('image', imageFile);
-  payload.append('userId', session.user.id);
-
   try {
-    const res = await fetch(`${process.env.URL}/api/blogs/upload`, {
-      method: 'POST',
-      body: payload,
-    });
+    const imagePath = await saveImage(imageFile, 'blogs/temp');
 
-    if (!res.ok) {
-      const data = await res.json();
-      return {
-        success: false,
-        error: data?.errors?.error || '画像アップロードに失敗しました。',
-      };
-    }
-
-    const data = await res.json();
-
-    if (!data?.url) {
+    if (!imagePath) {
       return {
         success: false,
         error: '画像URLの取得に失敗しました。',
@@ -197,7 +174,7 @@ export async function uploadBlogImageForUpdate(formData: FormData): Promise<Uplo
 
     return {
       success: true,
-      url: data.url,
+      url: imagePath,
     };
   } catch (error) {
     return {
