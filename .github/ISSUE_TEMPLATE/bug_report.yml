@@ -1,0 +1,106 @@
+name: 問題報告
+description: コードの問題点を報告する
+title: "[問題報告]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 問題報告テンプレート
+        具体的に、正確に記述してください。
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: 問題点
+      description: |
+        何が問題かを具体的に記述してください。
+        - 対象のファイルパス（必須）
+        - 該当するコードの引用（必須）
+        - 問題のある箇所が複数ある場合はすべて列挙する
+      placeholder: |
+        **対象ファイル**: `src/app/blogs/page.tsx`
+
+        **該当コード**:
+        ```tsx
+        // L28-L45
+        useEffect(() => {
+          const fetchBlogs = async () => {
+            const response = await fetch('/api/blogs');
+            // ...
+          };
+          fetchBlogs();
+        }, []);
+        ```
+
+        - `blogs/page.tsx` でページ全体が Client Component になっており、useEffect 内で API Route を fetch している
+        - 同様のパターンが `blogs/[id]/page.tsx` にも存在する
+    validations:
+      required: true
+
+  - type: textarea
+    id: reason
+    attributes:
+      label: なぜ問題と考えるか
+      description: |
+        技術的な根拠を自分の言葉で説明してください。
+        「なんとなくダメそう」ではなく、何がどう問題なのかを書く。
+      placeholder: |
+        App Router のページコンポーネントはデフォルトで Server Component として動作する。
+        Server Component であればサーバーサイドでデータを取得し、初期HTMLにコンテンツを含めることができる。
+        しかし現在の実装では "use client" を付けて Client Component にしているため、
+        初期HTMLが空の状態でレンダリングされ、クライアント側で fetch が完了するまでコンテンツが表示されない。
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: 影響範囲
+      description: |
+        この問題が何に影響するかを記述してください。
+        例: パフォーマンス / SEO / セキュリティ / 保守性 / UX
+      placeholder: |
+        - **パフォーマンス**: クライアント側の fetch により初期表示が遅くなる
+        - **SEO**: 初期HTMLにコンテンツがないため、クローラーが認識できない
+        - **保守性**: loading.tsx / error.tsx が活かされず、状態管理を自前で行う必要がある
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: 自分が考える改善案
+      description: |
+        調べた上での改善案を記述してください。
+        間違っていても構いません。「自分はこう考えた」という痕跡を残すことが目的です。
+      placeholder: |
+        - ページコンポーネントから "use client" を削除し、Server Component にする
+        - useEffect + fetch を削除し、Server Component 内で直接データを取得する
+        - インタラクションが必要な部分（削除ボタン等）だけを Client Component として分離する
+    validations:
+      required: true
+
+  - type: textarea
+    id: references
+    attributes:
+      label: 参考にした情報源
+      description: |
+        この問題を調査する際に参照したドキュメント・記事のURLを記載してください。
+        公式ドキュメント、技術ブログ、書籍など。
+      placeholder: |
+        - https://nextjs.org/docs/app/building-your-application/data-fetching
+        - https://zenn.dev/xxx/articles/yyy
+    validations:
+      required: false
+
+  - type: textarea
+    id: related
+    attributes:
+      label: 関連する issue
+      description: |
+        この問題と関連する issue があればリンクしてください。
+      placeholder: |
+        - #39 (フロントでfetchしている箇所がある)
+    validations:
+      required: false
