@@ -2,7 +2,7 @@ import type { NextAuthConfig } from "next-auth";
 import { CredentialsSignin } from "next-auth";
 
 export const authConfig = {
-  pages: { signIn: '/login' },
+  pages: { signIn: '/signin' },
   logger: {
     error(err: Error) {
       if (err instanceof CredentialsSignin) {
@@ -32,7 +32,7 @@ export const authConfig = {
           return true;
         }
         return false; // 管理者でなければアクセス不可
-      } else if (isLoggedIn && (nextUrl.pathname === '/login' || nextUrl.pathname === '/signup')) {
+      } else if (isLoggedIn && (nextUrl.pathname === '/signin' || nextUrl.pathname === '/signup')) {
         return Response.redirect(new URL('/', nextUrl));
       } else if (isOnCommonPage) {
         return true; // どちらでもアクセス可能
