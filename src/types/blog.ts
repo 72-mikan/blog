@@ -24,8 +24,8 @@ export type BlogDetail = {
   title: string;
   context: string;
   isPublic: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
   user: {
     id: string;
     name: string;
