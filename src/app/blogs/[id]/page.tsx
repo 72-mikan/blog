@@ -4,9 +4,8 @@ import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
 import { auth } from '@/auth';
-import { prisma } from '@/lib/prisma';
+import { getBlog } from '@/lib/actions/blogs/getBlog';
 import BlogActions from './BlogActions';
-import type { BlogDetail } from '@/types/blog';
 
 type BlogDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -17,23 +16,7 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
   const session = await auth();
   const isAdmin = session?.user?.role === 'ADMIN';
 
-  const blog: BlogDetail | null = await prisma.context.findUnique({
-    where: { id: parseInt(id) },
-    select: {
-      id: true,
-      title: true,
-      context: true,
-      isPublic: true,
-      createdAt: true,
-      updatedAt: true,
-      user: {
-        select: { id: true, name: true },
-      },
-      tags: {
-        select: { name: true },
-      },
-    },
-  });
+  const blog = await getBlog(parseInt(id));
 
   if (!blog || (!blog.isPublic && !isAdmin)) {
     notFound();
@@ -53,9 +36,9 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
                 <h1 className="text-3xl font-bold text-slate-900">{blog.title}</h1>
                 <div className="mt-4 flex items-center gap-6 text-sm text-slate-600">
                   <span>{blog.user.name}</span>
-                  <span>公開日: {blog.createdAt.toLocaleDateString('ja-JP')}</span>
-                  {blog.createdAt.getTime() !== blog.updatedAt.getTime() && (
-                    <span>更新日: {blog.updatedAt.toLocaleDateString('ja-JP')}</span>
+                  <span>公開日: {new Date(blog.createdAt).toLocaleDateString('ja-JP')}</span>
+                  {blog.createdAt !== blog.updatedAt && (
+                    <span>更新日: {new Date(blog.updatedAt).toLocaleDateString('ja-JP')}</span>
                   )}
                 </div>
               </div>
