@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import type { Blog } from "@/lib/actions/blogs/getBlogs";
+import type { Blog } from "@/types/blog";
 
 type Props = {
   blog: Blog;
@@ -40,7 +40,7 @@ export default function BlogCard({ blog }: Props) {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4 text-sm text-slate-500">
               <span>{blog.user.name}</span>
-              <span>{blog.createdAt.toLocaleDateString('ja-JP')}</span>
+              <span>{new Date(blog.createdAt).toLocaleDateString('ja-JP')}</span>
             </div>
             {blog.tags.length > 0 && (
               <div className="flex gap-2">
