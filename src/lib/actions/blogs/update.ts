@@ -1,10 +1,12 @@
 'use server'
 
 import { auth } from "@/auth";
-import { ApiConnectError } from "@/class/error/ApiConnectError";
 import { createBlogSchema } from "@/validations/blogs/upsert";
 import { revalidatePath } from "next/cache";
 import { saveImage } from "@/utils/image";
+import { prisma } from "@/lib/prisma";
+import { ForbiddenError } from "@/class/error/ForbiddenError";
+import { BadRequestError } from "@/class/error/BadRequestError";
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 
@@ -16,10 +18,10 @@ type UploadImageState = {
 
 type ActionState = {
   success: boolean;
-  errors: { 
-    title?: string[] | string;
-    context?: string[] | string;
-    tags?: string[] | string;
+  errors: {
+    title?: string[];
+    context?: string[];
+    tags?: string[];
     error?: string;
   };
   formData?: {
@@ -31,11 +33,11 @@ type ActionState = {
 
 export async function updateBlogPost(
   blogId: number,
-  state: ActionState,
+  _state: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
   const session = await auth();
-  
+
   if (!session?.user?.id) {
     return {
       success: false,
@@ -49,7 +51,7 @@ export async function updateBlogPost(
   const tag = formData.get('tag');
   const tags = typeof tag === 'string' && tag.trim() ? tag.trim().split(/\s+/).filter(Boolean) : [];
   const context = formData.get('context');
-  const isPublic = formData.get('isPublic') ?? false;
+  const isPublic = formData.get('isPublic') === 'true';
 
   const validationResult = createBlogSchema.safeParse({
     title,
@@ -62,9 +64,9 @@ export async function updateBlogPost(
     return {
       success: false,
       errors: {
-        title: errors.fieldErrors.title?.[0] || [],
-        context: errors.fieldErrors.context?.[0] || [],
-        tags: errors.fieldErrors.tags?.[0] || [],
+        title: errors.fieldErrors.title || [],
+        context: errors.fieldErrors.context || [],
+        tags: errors.fieldErrors.tags || [],
       },
       formData: {
         title: String(title || ''),
@@ -75,39 +77,55 @@ export async function updateBlogPost(
   }
 
   try {
-    const res = await fetch(`${process.env.URL}/api/blogs`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        id: blogId,
-        userId: session.user.id,
-        title: title,
-        tags: tags,
-        context: context,
-        isPublic: isPublic ? true : false,
-      }),
+    const user = await prisma.user.findFirst({
+      where: { id: session.user.id, role: 'ADMIN' },
     });
 
-    if (!res.ok) {
-      const data = await res.json();
-      throw new ApiConnectError(data.errors.error || 'API接続エラーが発生しました。');
+    if (!user) {
+      throw new ForbiddenError('管理者権限がありません。');
     }
+
+    const blog = await prisma.context.findUnique({
+      where: { id: blogId },
+    });
+
+    if (!blog) {
+      throw new BadRequestError('ブログが見つかりません。');
+    }
+
+    const existingTags = await prisma.tag.findMany({
+      where: { name: { in: tags } },
+    });
+
+    if (existingTags.length !== tags.length) {
+      throw new BadRequestError('タグが存在しません。');
+    }
+
+    await prisma.context.update({
+      where: { id: blogId },
+      data: {
+        title: String(title),
+        context: String(context),
+        isPublic,
+        tags: {
+          set: [],
+          connect: tags.map((tag) => ({ name: tag })),
+        },
+      },
+    });
 
     revalidatePath(`/blogs/${blogId}`);
     revalidatePath('/blogs');
+
     return {
       success: true,
       errors: {},
     };
   } catch (e) {
-    if (e instanceof ApiConnectError) {
+    if (e instanceof ForbiddenError || e instanceof BadRequestError) {
       return {
         success: false,
-        errors: {
-          error: e.message,
-        },
+        errors: { error: e.message },
         formData: {
           title: String(title || ''),
           tag: String(tag || ''),
@@ -117,9 +135,7 @@ export async function updateBlogPost(
     }
     return {
       success: false,
-      errors: {
-        error: 'エラーが発生しました。',
-      },
+      errors: { error: 'エラーが発生しました。' },
       formData: {
         title: String(title || ''),
         tag: String(tag || ''),
