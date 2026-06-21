@@ -2,9 +2,9 @@ import { prisma } from '@/lib/prisma';
 import BlogEditForm from './BlogEditForm';
 import { notFound } from 'next/navigation';
 
-interface BlogEditContentProps {
+type BlogEditContentProps = {
   id: string;
-}
+};
 
 export default async function BlogEditContent({ id }: BlogEditContentProps) {
   const blog = await prisma.context.findUnique({

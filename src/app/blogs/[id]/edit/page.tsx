@@ -1,15 +1,15 @@
 import { Suspense } from 'react';
-import BlogEditContent from '@/app/components/blogs/BlogEditContent';
+import BlogEditContent from './BlogEditContent';
 
-interface BlogEditPageProps {
+type BlogEditPageProps = {
   params: Promise<{
     id: string;
   }>;
-}
+};
 
 export default async function BlogEditPage({ params }: BlogEditPageProps) {
   const { id } = await params;
-  
+
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
