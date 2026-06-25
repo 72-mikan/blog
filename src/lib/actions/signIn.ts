@@ -1,7 +1,8 @@
 'use server'
 
-import {signInSchema } from '@/validations/signIn';
-import { signIn } from '@/auth'; // signIn関数のインポート
+import { isRedirectError } from 'next/dist/client/components/redirect-error';
+import { signInSchema } from '@/validations/signIn';
+import { signIn } from '@/auth';
 import { handleAuthError } from './error';
 
 type ActionState = {
@@ -43,15 +44,13 @@ export async function submitSignInForm(
   }
 
   try {
-    // サインイン処理
     await signIn('credentials', {
       email: formData.get('email') as string,
       password: formData.get('password') as string,
-      redirect: false,
+      redirectTo: '/',
     });
-
-    return { success: true };
   } catch (error) {
+    if (isRedirectError(error)) throw error;
     return handleAuthError(error, {
       email: email as string,
     });
