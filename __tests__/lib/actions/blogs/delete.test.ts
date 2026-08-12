@@ -38,7 +38,7 @@ describe('deleteBlogPost', () => {
       json: vi.fn().mockResolvedValue({
         errors: { error: '削除に失敗しました。' },
       }),
-    }) as any;
+    }) as Mock;
 
     const result = await deleteBlogPost(1);
 
@@ -51,7 +51,7 @@ describe('deleteBlogPost', () => {
     (cookies as Mock).mockReturnValue({ toString: () => 'session=abc' });
 
     const fetchMock = vi.fn().mockResolvedValue({ ok: true });
-    global.fetch = fetchMock as any;
+    global.fetch = fetchMock as Mock;
 
     const result = await deleteBlogPost(1);
 

@@ -28,7 +28,7 @@ describe('GET /api/blogs/[id]', () => {
 
   it('管理者なら非公開でも取得できる', async () => {
     (auth as Mock).mockResolvedValue({ user: { role: 'ADMIN' } });
-    (prisma.context.findUnique as any).mockResolvedValue({
+    (prisma.context.findUnique as Mock).mockResolvedValue({
       id: 1,
       title: '非公開記事',
       context: '本文',
@@ -49,7 +49,7 @@ describe('GET /api/blogs/[id]', () => {
 
   it('非管理者は公開記事のみ取得できる', async () => {
     (auth as Mock).mockResolvedValue({ user: { role: 'USER' } });
-    (prisma.context.findUnique as any).mockResolvedValue({
+    (prisma.context.findUnique as Mock).mockResolvedValue({
       id: 2,
       title: '公開記事',
       context: '本文',
@@ -70,7 +70,7 @@ describe('GET /api/blogs/[id]', () => {
 
   it('非管理者が非公開記事にアクセスすると403', async () => {
     (auth as Mock).mockResolvedValue({ user: { role: 'USER' } });
-    (prisma.context.findUnique as any).mockResolvedValue({
+    (prisma.context.findUnique as Mock).mockResolvedValue({
       id: 3,
       title: '非公開記事',
       context: '本文',
@@ -91,7 +91,7 @@ describe('GET /api/blogs/[id]', () => {
 
   it('存在しない場合は404', async () => {
     (auth as Mock).mockResolvedValue({ user: { role: 'ADMIN' } });
-    (prisma.context.findUnique as any).mockResolvedValue(null);
+    (prisma.context.findUnique as Mock).mockResolvedValue(null);
 
     const request = new Request(`${process.env.URL}/api/blogs/999`, { method: 'GET' });
     const response = await GET(request, { params: Promise.resolve({ id: '999' }) });
@@ -109,9 +109,9 @@ describe('DELETE /api/blogs/[id]', () => {
 
   it('管理者なら削除できる', async () => {
     (auth as Mock).mockResolvedValue({ user: { id: 'user-1' } });
-    (prisma.user.findFirst as any).mockResolvedValue({ id: 'user-1' });
-    (prisma.context.findUnique as any).mockResolvedValue({ id: 1 });
-    (prisma.context.delete as any).mockResolvedValue({ id: 1 });
+    (prisma.user.findFirst as Mock).mockResolvedValue({ id: 'user-1' });
+    (prisma.context.findUnique as Mock).mockResolvedValue({ id: 1 });
+    (prisma.context.delete as Mock).mockResolvedValue({ id: 1 });
 
     const request = new Request(`${process.env.URL}/api/blogs/1`, { method: 'DELETE' });
     const response = await DELETE(request, { params: Promise.resolve({ id: '1' }) });
@@ -134,7 +134,7 @@ describe('DELETE /api/blogs/[id]', () => {
 
   it('管理者でない場合は403', async () => {
     (auth as Mock).mockResolvedValue({ user: { id: 'user-1' } });
-    (prisma.user.findFirst as any).mockResolvedValue(null);
+    (prisma.user.findFirst as Mock).mockResolvedValue(null);
 
     const request = new Request(`${process.env.URL}/api/blogs/1`, { method: 'DELETE' });
     const response = await DELETE(request, { params: Promise.resolve({ id: '1' }) });
@@ -146,8 +146,8 @@ describe('DELETE /api/blogs/[id]', () => {
 
   it('ブログが存在しない場合は400', async () => {
     (auth as Mock).mockResolvedValue({ user: { id: 'user-1' } });
-    (prisma.user.findFirst as any).mockResolvedValue({ id: 'user-1' });
-    (prisma.context.findUnique as any).mockResolvedValue(null);
+    (prisma.user.findFirst as Mock).mockResolvedValue({ id: 'user-1' });
+    (prisma.context.findUnique as Mock).mockResolvedValue(null);
 
     const request = new Request(`${process.env.URL}/api/blogs/1`, { method: 'DELETE' });
     const response = await DELETE(request, { params: Promise.resolve({ id: '1' }) });

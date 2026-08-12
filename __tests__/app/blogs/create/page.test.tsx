@@ -3,7 +3,22 @@ import { render, screen } from '@testing-library/react';
 import BlogCreatePage from '@/app/blogs/create/page';
 
 // @vitest-environment jsdom
-let mockState: any;
+type MockState = {
+  success: boolean;
+  errors: {
+    title?: string[];
+    context?: string[];
+    tags?: string[];
+    error?: string;
+  };
+  formData?: {
+    title?: string;
+    tag?: string;
+    context?: string;
+  };
+};
+
+let mockState: MockState;
 let mockPending = false;
 const mockAction = vi.fn();
 
@@ -19,14 +34,20 @@ vi.mock("@/lib/actions/blogs/create", () => ({
   createBlogPost: vi.fn(),
 }));
 
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+  }),
+}));
+
 describe('BlogCreatePage', () => {
   beforeEach(() => {
     mockPending = false;
     mockState = {
       success: false,
       errors: {
-        title: 'タイトルは必須です。',
-        tags: '少なくとも1つのタグを選択してください。',
+        title: ['タイトルは必須です。'],
+        tags: ['少なくとも1つのタグを選択してください。'],
         error: 'API接続エラー',
       },
       formData: {

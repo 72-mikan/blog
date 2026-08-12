@@ -1,8 +1,9 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { updateBlogPost } from '@/lib/actions/blogs/update';
 import type { Mock } from 'vitest';
 import { auth } from '@/auth';
 import { revalidatePath } from 'next/cache';
+import { prisma } from '@/lib/prisma';
 
 vi.mock('@/auth', () => ({
   auth: vi.fn(),
@@ -12,23 +13,29 @@ vi.mock('next/cache', () => ({
   revalidatePath: vi.fn(),
 }));
 
-describe('updateBlogPost', () => {
-  let fetchMock: Mock;
+vi.mock('@/lib/prisma', () => ({
+  prisma: {
+    user: { findFirst: vi.fn() },
+    tag: { findMany: vi.fn() },
+    context: {
+      findUnique: vi.fn(),
+      update: vi.fn(),
+    },
+  },
+}));
 
+describe('updateBlogPost', () => {
   beforeEach(() => {
     vi.resetAllMocks();
-    fetchMock = vi.fn();
-    global.fetch = fetchMock as any;
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
   });
 
   describe('正常系のテスト', () => {
     it('記事の更新完了でsuccessがtrueを返す', async () => {
       (auth as Mock).mockResolvedValue({ user: { id: 'user-1' } });
-      fetchMock.mockResolvedValue({ ok: true });
+      (prisma.user.findFirst as Mock).mockResolvedValue({ id: 'user-1' });
+      (prisma.context.findUnique as Mock).mockResolvedValue({ id: 1 });
+      (prisma.tag.findMany as Mock).mockResolvedValue([{ name: 'tag1' }, { name: 'tag2' }]);
+      (prisma.context.update as Mock).mockResolvedValue({ id: 1 });
 
       const formData = new FormData();
       formData.append('title', '更新タイトル');
@@ -74,14 +81,10 @@ describe('updateBlogPost', () => {
       });
     });
 
-    it('APIエラー時にエラーとformDataを返す', async () => {
+    it('ブログが存在しない場合、エラーを返す', async () => {
       (auth as Mock).mockResolvedValue({ user: { id: 'user-1' } });
-      fetchMock.mockResolvedValue({
-        ok: false,
-        json: vi.fn().mockResolvedValue({
-          errors: { error: 'ブログが見つかりません。' },
-        }),
-      });
+      (prisma.user.findFirst as Mock).mockResolvedValue({ id: 'user-1' });
+      (prisma.context.findUnique as Mock).mockResolvedValue(null);
 
       const formData = new FormData();
       formData.append('title', '更新タイトル');
@@ -101,7 +104,6 @@ describe('updateBlogPost', () => {
 
     it('空文字列のタグが空配列として扱われる', async () => {
       (auth as Mock).mockResolvedValue({ user: { id: 'user-1' } });
-      fetchMock.mockResolvedValue({ ok: true });
 
       const formData = new FormData();
       formData.append('title', '更新タイトル');
@@ -116,7 +118,14 @@ describe('updateBlogPost', () => {
 
     it('複数空白のタグが正しく分割される', async () => {
       (auth as Mock).mockResolvedValue({ user: { id: 'user-1' } });
-      fetchMock.mockResolvedValue({ ok: true });
+      (prisma.user.findFirst as Mock).mockResolvedValue({ id: 'user-1' });
+      (prisma.context.findUnique as Mock).mockResolvedValue({ id: 1 });
+      (prisma.tag.findMany as Mock).mockResolvedValue([
+        { name: 'tag1' },
+        { name: 'tag2' },
+        { name: 'tag3' },
+      ]);
+      (prisma.context.update as Mock).mockResolvedValue({ id: 1 });
 
       const formData = new FormData();
       formData.append('title', '更新タイトル');
@@ -125,10 +134,15 @@ describe('updateBlogPost', () => {
 
       await updateBlogPost(1, undefined, formData);
 
-      const fetchCall = fetchMock.mock.calls[0];
-      const requestBody = JSON.parse(fetchCall[1].body);
-      
-      expect(requestBody.tags).toEqual(['tag1', 'tag2', 'tag3']);
+      expect(prisma.context.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            tags: expect.objectContaining({
+              connect: [{ name: 'tag1' }, { name: 'tag2' }, { name: 'tag3' }],
+            }),
+          }),
+        })
+      );
     });
   });
 });
