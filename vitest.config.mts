@@ -7,6 +7,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     env: {
+      URL: 'http://localhost:3000',
       NEXT_PUBLIC_SUPABASE_URL: 'https://dummy.supabase.co',
       NEXT_PUBLIC_SUPABASE_ANON_KEY: 'dummy-anon-key',
     },
