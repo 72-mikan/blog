@@ -6,6 +6,11 @@ export default defineConfig({
   plugins: [tsconfigPaths(), react()],
   test: {
     environment: 'jsdom',
+    server: {
+      deps: {
+        inline: ['next-auth', '@auth/core'],
+      },
+    },
     env: {
       URL: 'http://localhost:3000',
       NEXT_PUBLIC_SUPABASE_URL: 'https://dummy.supabase.co',
