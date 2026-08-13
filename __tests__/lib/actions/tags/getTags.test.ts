@@ -28,7 +28,7 @@ describe('getTags', () => {
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining('api/tags'),
         expect.objectContaining({
-          cache: 'no-store',
+          next: { revalidate: 60 },
         })
       );
     });

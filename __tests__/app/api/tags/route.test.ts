@@ -5,6 +5,8 @@ import { auth } from '@/auth';
 import { saveImage } from '@/utils/image';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import dotenv from "dotenv";
+import type { Mock } from 'vitest';
+import type { NextRequest } from 'next/server';
 
 dotenv.config();
 
@@ -63,7 +65,7 @@ describe('/api/tags route handlers', () => {
 
   describe('GET', () => {
     it('GET実行時にfindManyが呼ばれてタグ一覧を返す', async () => {
-      (prisma.tag.findMany as any).mockResolvedValue([
+      (prisma.tag.findMany as Mock).mockResolvedValue([
         { id: 1, name: 'React', _count: { contexts: 2 } },
       ]);
 
@@ -76,7 +78,7 @@ describe('/api/tags route handlers', () => {
     });
 
     it('取得に失敗した場合は500を返す', async () => {
-      (prisma.tag.findMany as any).mockRejectedValue(new Error('DB error'));
+      (prisma.tag.findMany as Mock).mockRejectedValue(new Error('DB error'));
 
       const response = await GET();
       const data = await response.json();
@@ -88,7 +90,7 @@ describe('/api/tags route handlers', () => {
 
   describe('POST', () => {
     it('認証されていない場合は401を返す', async () => {
-      (auth as any).mockResolvedValue(null);
+      (auth as Mock).mockResolvedValue(null);
 
       const request = createFormRequest('POST', { name: 'React' });
 
@@ -100,7 +102,7 @@ describe('/api/tags route handlers', () => {
     });
 
     it('タグ名が空の場合は400を返す', async () => {
-      (auth as any).mockResolvedValue({ user: { id: 'user-1' } });
+      (auth as Mock).mockResolvedValue({ user: { id: 'user-1' } });
 
       const request = createFormRequest('POST', { name: '' });
 
@@ -112,8 +114,8 @@ describe('/api/tags route handlers', () => {
     });
 
     it('重複タグ名は400を返す', async () => {
-      (auth as any).mockResolvedValue({ user: { id: 'user-1' } });
-      (prisma.tag.create as any).mockRejectedValue(
+      (auth as Mock).mockResolvedValue({ user: { id: 'user-1' } });
+      (prisma.tag.create as Mock).mockRejectedValue(
         new PrismaClientKnownRequestError('duplicate', {
           code: 'P2002',
           clientVersion: '0.0.0',
@@ -131,8 +133,8 @@ describe('/api/tags route handlers', () => {
     });
 
     it('POST実行時にcreateが呼ばれて201を返す', async () => {
-      (auth as any).mockResolvedValue({ user: { id: 'user-1' } });
-      (prisma.tag.create as any).mockResolvedValue({ id: 1, name: 'React' });
+      (auth as Mock).mockResolvedValue({ user: { id: 'user-1' } });
+      (prisma.tag.create as Mock).mockResolvedValue({ id: 1, name: 'React' });
 
       const request = createFormRequest('POST', { name: 'React' });
 
@@ -167,8 +169,8 @@ describe('/api/tags route handlers', () => {
     // });
 
     it('画像保存に失敗した場合は400を返す', async () => {
-      (auth as any).mockResolvedValue({ user: { id: 'user-1' } });
-      (saveImage as any).mockResolvedValue(null);
+      (auth as Mock).mockResolvedValue({ user: { id: 'user-1' } });
+      (saveImage as Mock).mockResolvedValue(null);
 
       const file = new File([new Uint8Array([1, 2, 3])], 'test.png', { type: 'image/png' });
       const request = createFormRequest('POST', { name: 'React' }, file);
@@ -183,7 +185,7 @@ describe('/api/tags route handlers', () => {
 
   describe('PUT', () => {
     it('認証されていない場合は401を返す', async () => {
-      (auth as any).mockResolvedValue(null);
+      (auth as Mock).mockResolvedValue(null);
 
       const request = createFormRequest('PUT', { id: '1', name: 'Vue' });
 
@@ -195,7 +197,7 @@ describe('/api/tags route handlers', () => {
     });
 
     it('タグIDがない場合は400を返す', async () => {
-      (auth as any).mockResolvedValue({ user: { id: 'user-1' } });
+      (auth as Mock).mockResolvedValue({ user: { id: 'user-1' } });
 
       const request = createFormRequest('PUT', { name: 'Vue' });
 
@@ -207,7 +209,7 @@ describe('/api/tags route handlers', () => {
     });
 
     it('タグ名が空の場合は400を返す', async () => {
-      (auth as any).mockResolvedValue({ user: { id: 'user-1' } });
+      (auth as Mock).mockResolvedValue({ user: { id: 'user-1' } });
 
       const request = createFormRequest('PUT', { id: '1', name: '' });
 
@@ -219,8 +221,8 @@ describe('/api/tags route handlers', () => {
     });
 
     it('重複タグ名は400を返す', async () => {
-      (auth as any).mockResolvedValue({ user: { id: 'user-1' } });
-      (prisma.tag.update as any).mockRejectedValue(
+      (auth as Mock).mockResolvedValue({ user: { id: 'user-1' } });
+      (prisma.tag.update as Mock).mockRejectedValue(
         new PrismaClientKnownRequestError('duplicate', {
           code: 'P2002',
           clientVersion: '0.0.0',
@@ -238,8 +240,8 @@ describe('/api/tags route handlers', () => {
     });
 
     it('PUT実行時にupdateが呼ばれて200を返す', async () => {
-      (auth as any).mockResolvedValue({ user: { id: 'user-1' } });
-      (prisma.tag.update as any).mockResolvedValue({ id: 1, name: 'Vue' });
+      (auth as Mock).mockResolvedValue({ user: { id: 'user-1' } });
+      (prisma.tag.update as Mock).mockResolvedValue({ id: 1, name: 'Vue' });
 
       const request = createFormRequest('PUT', { id: '1', name: 'Vue' });
 
@@ -277,13 +279,13 @@ describe('/api/tags route handlers', () => {
 
   describe('DELETE', () => {
     it('認証されていない場合は401を返す', async () => {
-      (auth as any).mockResolvedValue(null);
+      (auth as Mock).mockResolvedValue(null);
 
       const request = new Request(`${process.env.URL}/api/tags?id=1`, {
         method: 'DELETE',
       });
 
-      const response = await DELETE(request as any);
+      const response = await DELETE(request as unknown as NextRequest);
       const data = await response.json();
 
       expect(response.status).toBe(401);
@@ -291,13 +293,13 @@ describe('/api/tags route handlers', () => {
     });
 
     it('タグIDがない場合は400を返す', async () => {
-      (auth as any).mockResolvedValue({ user: { id: 'user-1' } });
+      (auth as Mock).mockResolvedValue({ user: { id: 'user-1' } });
 
       const request = new Request(`${process.env.URL}/api/tags`, {
         method: 'DELETE',
       });
 
-      const response = await DELETE(request as any);
+      const response = await DELETE(request as unknown as NextRequest);
       const data = await response.json();
 
       expect(response.status).toBe(400);
@@ -305,14 +307,14 @@ describe('/api/tags route handlers', () => {
     });
 
     it('DELETE実行時にdeleteが呼ばれて200を返す', async () => {
-      (auth as any).mockResolvedValue({ user: { id: 'user-1' } });
-      (prisma.tag.delete as any).mockResolvedValue({ id: 1 });
+      (auth as Mock).mockResolvedValue({ user: { id: 'user-1' } });
+      (prisma.tag.delete as Mock).mockResolvedValue({ id: 1 });
 
       const request = new Request(`${process.env.URL}/api/tags?id=1`, {
         method: 'DELETE',
       });
 
-      const response = await DELETE(request as any);
+      const response = await DELETE(request as unknown as NextRequest);
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -321,14 +323,14 @@ describe('/api/tags route handlers', () => {
     });
 
     it('削除に失敗した場合は500を返す', async () => {
-      (auth as any).mockResolvedValue({ user: { id: 'user-1' } });
-      (prisma.tag.delete as any).mockRejectedValue(new Error('DB error'));
+      (auth as Mock).mockResolvedValue({ user: { id: 'user-1' } });
+      (prisma.tag.delete as Mock).mockRejectedValue(new Error('DB error'));
 
       const request = new Request(`${process.env.URL}/api/tags?id=1`, {
         method: 'DELETE',
       });
 
-      const response = await DELETE(request as any);
+      const response = await DELETE(request as unknown as NextRequest);
       const data = await response.json();
 
       expect(response.status).toBe(500);

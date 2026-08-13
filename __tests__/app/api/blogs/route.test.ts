@@ -54,7 +54,7 @@ describe('GET /api/blogs', () => {
         },
       ];
 
-      (prisma.context.findMany as any).mockResolvedValue(mockBlogs);
+      (prisma.context.findMany as Mock).mockResolvedValue(mockBlogs);
 
       const request = new Request(`${process.env.URL}/api/blogs`, {
         method: 'GET',
@@ -96,7 +96,7 @@ describe('GET /api/blogs', () => {
         },
       ];
 
-      (prisma.context.findMany as any).mockResolvedValue(mockBlogs);
+      (prisma.context.findMany as Mock).mockResolvedValue(mockBlogs);
 
       const request = new Request(`${process.env.URL}/api/blogs`, {
         method: 'GET',
@@ -137,7 +137,7 @@ describe('GET /api/blogs', () => {
         },
       ];
 
-      (prisma.context.findMany as any).mockResolvedValue(mockBlogs);
+      (prisma.context.findMany as Mock).mockResolvedValue(mockBlogs);
 
       const request = new Request(`${process.env.URL}/api/blogs`, {
         method: 'GET',
@@ -164,7 +164,7 @@ describe('GET /api/blogs', () => {
 
     it('記事が0件の場合、空配列を返す', async () => {
       (auth as Mock).mockResolvedValue(null);
-      (prisma.context.findMany as any).mockResolvedValue([]);
+      (prisma.context.findMany as Mock).mockResolvedValue([]);
 
       const request = new Request(`${process.env.URL}/api/blogs`, {
         method: 'GET',
@@ -181,7 +181,7 @@ describe('GET /api/blogs', () => {
   describe('異常系のテスト', () => {
     it('データベースエラー時に500を返す', async () => {
       (auth as Mock).mockResolvedValue(null);
-      (prisma.context.findMany as any).mockRejectedValue(new Error('DB Error'));
+      (prisma.context.findMany as Mock).mockRejectedValue(new Error('DB Error'));
 
       const request = new Request(`${process.env.URL}/api/blogs`, {
         method: 'GET',
@@ -203,9 +203,9 @@ describe('POST /api/blogs', () => {
 
   describe('正常系のテスト', () => {
     it('正常なリクエスト時にステータス200と成功メッセージを返す', async () => {
-      (prisma.user.findFirst as any).mockResolvedValue({ id: 'user-1' });
-      (prisma.tag.findMany as any).mockResolvedValue([{ name: 'tag1' }, { name: 'tag2' }]);
-      (prisma.context.create as any).mockResolvedValue({ id: 'context-1' });
+      (prisma.user.findFirst as Mock).mockResolvedValue({ id: 'user-1' });
+      (prisma.tag.findMany as Mock).mockResolvedValue([{ name: 'tag1' }, { name: 'tag2' }]);
+      (prisma.context.create as Mock).mockResolvedValue({ id: 'context-1' });
 
       const request = new Request(`${process.env.URL}/api/blogs`, {
         method: 'POST',
@@ -248,7 +248,7 @@ describe('POST /api/blogs', () => {
     });
 
     it('管理者でない場合は403を返す', async () => {
-      (prisma.user.findFirst as any).mockResolvedValue(null);
+      (prisma.user.findFirst as Mock).mockResolvedValue(null);
 
       const request = new Request(`${process.env.URL}/api/blogs`, {
         method: 'POST',
@@ -269,8 +269,8 @@ describe('POST /api/blogs', () => {
     });
 
     it('タグが存在しない場合は400を返す', async () => {
-      (prisma.user.findFirst as any).mockResolvedValue({ id: 'user-1' });
-      (prisma.tag.findMany as any).mockResolvedValue([{ name: 'tag1' }]);
+      (prisma.user.findFirst as Mock).mockResolvedValue({ id: 'user-1' });
+      (prisma.tag.findMany as Mock).mockResolvedValue([{ name: 'tag1' }]);
 
       const request = new Request(`${process.env.URL}/api/blogs`, {
         method: 'POST',
@@ -298,10 +298,10 @@ describe('PUT /api/blogs', () => {
 
   describe('正常系のテスト', () => {
     it('正常なリクエスト時にステータス200と成功メッセージを返す', async () => {
-      (prisma.user.findFirst as any).mockResolvedValue({ id: 'user-1' });
-      (prisma.context.findUnique as any).mockResolvedValue({ id: 1, title: 'old' });
-      (prisma.tag.findMany as any).mockResolvedValue([{ name: 'tag1' }, { name: 'tag2' }]);
-      (prisma.context.update as any).mockResolvedValue({ id: 1 });
+      (prisma.user.findFirst as Mock).mockResolvedValue({ id: 'user-1' });
+      (prisma.context.findUnique as Mock).mockResolvedValue({ id: 1, title: 'old' });
+      (prisma.tag.findMany as Mock).mockResolvedValue([{ name: 'tag1' }, { name: 'tag2' }]);
+      (prisma.context.update as Mock).mockResolvedValue({ id: 1 });
 
       const request = new Request(`${process.env.URL}/api/blogs`, {
         method: 'PUT',
@@ -365,7 +365,7 @@ describe('PUT /api/blogs', () => {
     });
 
     it('管理者でない場合は403を返す', async () => {
-      (prisma.user.findFirst as any).mockResolvedValue(null);
+      (prisma.user.findFirst as Mock).mockResolvedValue(null);
 
       const request = new Request(`${process.env.URL}/api/blogs`, {
         method: 'PUT',
@@ -387,8 +387,8 @@ describe('PUT /api/blogs', () => {
     });
 
     it('ブログが存在しない場合は400を返す', async () => {
-      (prisma.user.findFirst as any).mockResolvedValue({ id: 'user-1' });
-      (prisma.context.findUnique as any).mockResolvedValue(null);
+      (prisma.user.findFirst as Mock).mockResolvedValue({ id: 'user-1' });
+      (prisma.context.findUnique as Mock).mockResolvedValue(null);
 
       const request = new Request(`${process.env.URL}/api/blogs`, {
         method: 'PUT',
@@ -410,9 +410,9 @@ describe('PUT /api/blogs', () => {
     });
 
     it('タグが存在しない場合は400を返す', async () => {
-      (prisma.user.findFirst as any).mockResolvedValue({ id: 'user-1' });
-      (prisma.context.findUnique as any).mockResolvedValue({ id: 1 });
-      (prisma.tag.findMany as any).mockResolvedValue([{ name: 'tag1' }]);
+      (prisma.user.findFirst as Mock).mockResolvedValue({ id: 'user-1' });
+      (prisma.context.findUnique as Mock).mockResolvedValue({ id: 1 });
+      (prisma.tag.findMany as Mock).mockResolvedValue([{ name: 'tag1' }]);
 
       const request = new Request(`${process.env.URL}/api/blogs`, {
         method: 'PUT',

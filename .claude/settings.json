@@ -1,6 +1,9 @@
 {
   "permissions": {
     "allow": [
+      "Edit",
+      "Write",
+      "Bash",
       "Bash(npm run dev)",
       "Bash(npm run build)",
       "Bash(npm run lint)",
@@ -53,7 +56,16 @@
       "Bash(npx prisma db pull*)",
       "Bash(git branch -d *)",
       "Bash(git branch -D *)",
-      "Edit(.env*)"
+      "Bash(git checkout -- *)",
+      "Bash(git restore *)",
+      "Bash(git stash drop*)",
+      "Bash(git stash clear*)",
+      "Bash(git tag -d *)",
+      "Bash(gh pr merge*)",
+      "Bash(gh pr close*)",
+      "Bash(gh issue close*)",
+      "Edit(.env*)",
+      "Write(.env*)"
     ],
     "deny": [
       "Bash(rm -rf *)",
@@ -62,6 +74,8 @@
       "Bash(git clean *)",
       "Bash(npx prisma migrate reset*)",
       "Bash(npx prisma db push --force-reset*)",
+      "Bash(sudo *)",
+      "Bash(npm publish*)",
       "Read(.env*)",
       "Read(**/*.pem)"
     ]
