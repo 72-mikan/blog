@@ -52,6 +52,22 @@ describe('createBlogPost', () => {
           tags: { connect: [{ name: 'tag1' }, { name: 'tag2' }] },
         },
       });
+    });
+
+    it('記事投稿成功時にキャッシュを再検証する', async () => {
+      (auth as Mock).mockResolvedValue({ user: { id: 'user-1' } });
+      (prisma.user.findFirst as Mock).mockResolvedValue({ id: 'user-1' });
+      (prisma.tag.findMany as Mock).mockResolvedValue([{ name: 'tag1' }, { name: 'tag2' }]);
+      (prisma.context.create as Mock).mockResolvedValue({ id: 'context-1' });
+
+      const formData = new FormData();
+      formData.append('title', 'タイトル');
+      formData.append('tag', 'tag1 tag2');
+      formData.append('context', '本文');
+      formData.append('isPublic', 'true');
+
+      await createBlogPost(undefined, formData);
+
       expect(revalidatePath).toHaveBeenCalledWith('/blogs');
       expect(revalidatePath).toHaveBeenCalledWith('/');
     });

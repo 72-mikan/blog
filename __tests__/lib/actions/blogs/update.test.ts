@@ -47,6 +47,23 @@ describe('updateBlogPost', () => {
 
       expect(result?.success).toBe(true);
       expect(result?.errors).toEqual({});
+    });
+
+    it('記事更新成功時にキャッシュを再検証する', async () => {
+      (auth as Mock).mockResolvedValue({ user: { id: 'user-1' } });
+      (prisma.user.findFirst as Mock).mockResolvedValue({ id: 'user-1' });
+      (prisma.context.findUnique as Mock).mockResolvedValue({ id: 1 });
+      (prisma.tag.findMany as Mock).mockResolvedValue([{ name: 'tag1' }, { name: 'tag2' }]);
+      (prisma.context.update as Mock).mockResolvedValue({ id: 1 });
+
+      const formData = new FormData();
+      formData.append('title', '更新タイトル');
+      formData.append('tag', 'tag1 tag2');
+      formData.append('context', '更新本文');
+      formData.append('isPublic', 'true');
+
+      await updateBlogPost(1, undefined, formData);
+
       expect(revalidatePath).toHaveBeenCalledWith('/blogs/1');
       expect(revalidatePath).toHaveBeenCalledWith('/blogs');
     });
